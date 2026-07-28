@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar — Flourish</title>
+<meta name="description" content="Entre na sua conta Flourish para trocar livros com outros leitores.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/auth.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-visual">
+    <h2>Bem-vinda(o) de volta!</h2>
+    <p>Continue sua jornada de leitura. Suas trocas, pontos e conversas estão esperando por você.</p>
+  </div>
+  <div class="auth-form-side">
+    <div class="auth-box">
+      <a href="index.html" class="back-home">← Voltar para o início</a>
+      <h1 style="font-size:1.8rem;">Entrar na sua conta</h1>
+      <p class="text-muted">Que bom ter você de volta.</p>
+
+      <button type="button" class="btn-google" id="googleLoginBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4.2h6.5c-.1 1-.9 2.7-2.6 3.8l4 3.1c2.4-2.2 3.6-5.4 3.6-8.9z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.8l-4-3.1c-1.1.7-2.4 1.1-3.9 1.1-3 0-5.6-2-6.5-4.8l-4.1 3.2C3.5 21.5 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.5 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.6.4-2.4L1.4 6.4C.5 8.1 0 10 0 12s.5 3.9 1.4 5.6l4.1-3.2z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.9 1.2 15.2 0 12 0 7.4 0 3.5 2.5 1.4 6.4l4.1 3.2c.9-2.8 3.5-4.8 6.5-4.8z"/></svg>
+        Entrar com Google
+      </button>
+      <div class="auth-divider">ou entre com e-mail</div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input class="input" type="email" id="email" name="email" required placeholder="voce@email.com">
+        </div>
+        <div class="field">
+          <label for="senha">Senha</label>
+          <input class="input" type="password" id="senha" name="senha" required placeholder="••••••••">
+        </div>
+        <div class="flex items-center" style="justify-content:flex-end;margin-bottom:18px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="forgotBtn" style="padding:4px 8px;">Esqueci a senha</button>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar</button>
+      </form>
+      <p class="auth-foot-link">Ainda não tem conta? <a href="cadastro.html"><strong>Cadastre-se gratuitamente</strong></a></p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/login.js"></script>
+</body>
+</html>

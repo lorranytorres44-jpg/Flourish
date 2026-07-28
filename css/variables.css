@@ -1,0 +1,76 @@
+/* ============================================
+   Flourish — Design Tokens
+   ============================================ */
+:root {
+  /* Paleta base */
+  --sage: #A8CFA8;
+  --sage-dark: #8FBB8F;
+  --sage-light: #CBE3CB;
+  --cream: #FFF8E8;
+  --cream-dark: #F5EAD1;
+  --brown: #8B6B4A;
+  --brown-dark: #6E5439;
+  --brown-light: #B79A7B;
+  --terracotta: #D98C6A;
+  --terracotta-dark: #C6754F;
+  --white: #FFFFFF;
+
+  /* Semânticas (light mode) */
+  --bg: var(--cream);
+  --bg-alt: var(--white);
+  --bg-elevated: var(--white);
+  --surface: #FFFFFF;
+  --text: #4A3B2C;
+  --text-muted: #7A6A56;
+  --text-inverse: #FFF8E8;
+  --border: #E9DFC8;
+  --accent: var(--sage);
+  --accent-strong: var(--sage-dark);
+  --accent-contrast: #2F4A2F;
+  --highlight: var(--terracotta);
+  --highlight-dark: var(--terracotta-dark);
+  --link: var(--brown);
+  --success: #6FA779;
+  --warning: #D9A441;
+  --danger: #C5654C;
+
+  --shadow-sm: 0 2px 8px rgba(139, 107, 74, 0.08);
+  --shadow-md: 0 6px 20px rgba(139, 107, 74, 0.12);
+  --shadow-lg: 0 14px 40px rgba(139, 107, 74, 0.16);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 450ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --container-max: 1200px;
+  --header-h: 76px;
+}
+
+[data-theme="dark"] {
+  --bg: #22241F;
+  --bg-alt: #2A2C25;
+  --bg-elevated: #2E3129;
+  --surface: #2A2C25;
+  --text: #F1EADA;
+  --text-muted: #C4B9A3;
+  --text-inverse: #22241F;
+  --border: #3E4136;
+  --sage-light: #35503B;
+  --accent: #4C7A52;
+  --accent-strong: #3D6442;
+  --accent-contrast: #E7F3E8;
+  --highlight: #E0946F;
+  --highlight-dark: #EDAE8C;
+  --link: #D8B992;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.4);
+}

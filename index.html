@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flourish — Troque, descubra e conecte-se por meio da leitura</title>
+<meta name="description" content="Flourish é a plataforma onde leitores trocam livros físicos entre si ou usam pontos para adquirir novas histórias. Simples, segura e feita para a comunidade leitora.">
+<meta name="theme-color" content="#A8CFA8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/home.css">
+<meta property="og:title" content="Flourish — troque livros com sua comunidade">
+<meta property="og:description" content="Encontre novos livros, faça trocas e ganhe pontos em uma plataforma acolhedora para leitores.">
+<meta property="og:type" content="website">
+</head>
+<body>
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+<div id="navbar-root"></div>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy animate-in">
+        <span class="eyebrow"><img src="assets/livro-logo.png" width="16" height="16" alt="">Sua próxima leitura está aqui</span>
+        <h1>Troque livros, descubra histórias, construa comunidade.</h1>
+        <p class="lead">Dê nova vida aos livros que já leu e encontre os próximos favoritos — trocando diretamente com outros leitores ou usando pontos.</p>
+        <div class="hero-actions">
+          <a href="cadastro.html" class="btn btn-primary btn-lg" id="ctaComecar">Começar Agora</a>
+          <a href="biblioteca.html" class="btn btn-secondary btn-lg">Explorar Biblioteca</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section class="section" id="como-funciona">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Simples assim</span>
+        <h2>Como funciona</h2>
+        <p>Em quatro passos você já está trocando livros com outros leitores.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="card step-card reveal">
+          <div class="step-num">1</div>
+          <h3>Anuncie seus livros</h3>
+          <p>Cadastre manualmente ou pelo ISBN — preenchemos capa, autor e sinopse automaticamente.</p>
+        </div>
+        <div class="card step-card reveal">
+          <div class="step-num">2</div>
+          <h3>Encontre o que deseja</h3>
+          <p>Explore a biblioteca com filtros por gênero, cidade, estado de conservação e mais.</p>
+        </div>
+        <div class="card step-card reveal">
+          <div class="step-num">3</div>
+          <h3>Solicite a troca</h3>
+          <p>Use seus pontos ou proponha um dos seus livros em troca. Combine tudo pelo chat.</p>
+        </div>
+        <div class="card step-card reveal">
+          <div class="step-num">4</div>
+          <h3>Receba e avalie</h3>
+          <p>Acompanhe o envio, receba seu livro e avalie a experiência com quem trocou com você.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIS AMADOS -->
+  <section class="section" style="padding-top:0;" id="destaques">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:24px;">
+        <h2 class="mb-0">Livros mais amados</h2>
+        <a href="biblioteca.html" class="btn btn-secondary">Ver todos</a>
+      </div>
+      <div class="carousel">
+        <button type="button" class="carousel-btn carousel-prev" id="featuredPrev" aria-label="Livro anterior">‹</button>
+        <div class="carousel-track" id="featuredBooks"></div>
+        <button type="button" class="carousel-btn carousel-next" id="featuredNext" aria-label="Próximo livro">›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFÍCIOS -->
+  <section class="section" id="beneficios">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Por que usar</span>
+        <h2>Benefícios da plataforma</h2>
+      </div>
+      <div class="benefits-grid">
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/sustentavel2.gif" data-duration="3000" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Sustentável</h3>
+          <p>Livros circulam ao invés de acumular poeira na estante — bom para você e para o planeta.</p>
+        </div>
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/favorito2.gif" data-duration="1570" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Economia real</h3>
+          <p>Use pontos ganhos na plataforma para conseguir livros sem gastar dinheiro.</p>
+        </div>
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/aperto-de-mao2.gif" data-duration="1840" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Comunidade confiável</h3>
+          <p>Avaliações e histórico de trocas garantem transparência entre leitores.</p>
+        </div>
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/caixa-de-entrega2.gif" data-duration="3000" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Rastreamento integrado</h3>
+          <p>Acompanhe cada etapa da troca, do envio à entrega, dentro da própria plataforma.</p>
+        </div>
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/missao2.gif" data-duration="2000" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Recomendações personalizadas</h3>
+          <p>Sugestões baseadas nos seus gêneros favoritos e no seu histórico de leitura.</p>
+        </div>
+        <div class="card benefit-card reveal">
+          <div class="benefit-icon benefit-icon-plain"><img data-src="assets/bater2papo.gif" data-duration="3600" alt="" width="64" height="64" class="benefit-gif"></div>
+          <h3>Chat integrado</h3>
+          <p>Combine os detalhes da troca com segurança, direto pelo chat da plataforma.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" id="depoimentos">
+    <div class="cta-banner">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Pronto para dar um novo destino aos seus livros?</h2>
+          <p>Crie sua conta gratuitamente, ganhe 5 pontos de boas-vindas e comece a trocar hoje mesmo.</p>
+          <a href="cadastro.html" class="btn btn-primary btn-lg">Criar minha conta</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-root"></div>
+
+<script type="module" src="js/home.js"></script>
+</body>
+</html>

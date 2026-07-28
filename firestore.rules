@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Perfis: leitura pública (precisamos mostrar nome/foto/cidade de quem
+    // anuncia livros), mas só o próprio usuário edita seus dados.
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+
+      match /favorites/{bookId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /readList/{bookId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      // Notificações: só o dono da conta lê/atualiza, mas qualquer usuário
+      // autenticado pode criar uma notificação para avisar o outro lado de
+      // uma troca (proposta recebida, mensagem nova, etc.).
+      match /notifications/{notifId} {
+        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null;
+      }
+    }
+
+    // Livros anunciados: leitura pública (é a biblioteca), só o dono cria/remove.
+    // Atualização: o dono pode editar qualquer campo; outros usuários autenticados
+    // só podem alterar o contador de curtidas (favoritar/desfavoritar).
+    match /books/{bookId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['curtidas'])
+      );
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Trocas: só as duas partes envolvidas leem/atualizam.
+    match /trades/{tradeId} {
+      allow read, update: if request.auth != null &&
+        (resource.data.requesterId == request.auth.uid || resource.data.ownerId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.requesterId == request.auth.uid;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read, create: if request.auth != null &&
+          (get(/databases/$(database)/documents/trades/$(tradeId)).data.requesterId == request.auth.uid ||
+           get(/databases/$(database)/documents/trades/$(tradeId)).data.ownerId == request.auth.uid);
+
+        // Mensagens só podem ser apagadas 14 dias depois da troca finalizada —
+        // dá tempo de reabrir a conversa se a entrega der problema, e nenhuma das
+        // partes consegue apagar o histórico (ex: endereço trocado) antes disso.
+        allow delete: if request.auth != null &&
+          get(/databases/$(database)/documents/trades/$(tradeId)).data.status == 'Finalizada' &&
+          (get(/databases/$(database)/documents/trades/$(tradeId)).data.requesterId == request.auth.uid ||
+           get(/databases/$(database)/documents/trades/$(tradeId)).data.ownerId == request.auth.uid) &&
+          request.time > get(/databases/$(database)/documents/trades/$(tradeId)).data.finalizadoEm + duration.value(14, 'd');
+      }
+    }
+
+    // Avaliações: leitura pública (mostradas no perfil/página do livro), autor cria a própria.
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.autorId == request.auth.uid;
+    }
+  }
+}

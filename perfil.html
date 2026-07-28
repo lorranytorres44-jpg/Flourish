@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Perfil — Flourish</title>
+<meta name="description" content="Veja e edite seu perfil, pontos e histórico na Flourish.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/perfil.css">
+</head>
+<body>
+<div id="navbar-root"></div>
+
+<header class="profile-header">
+  <div class="container">
+    <div class="profile-top">
+      <img class="profile-avatar" id="pFoto" src="" alt="Foto de perfil">
+      <div style="flex:1;min-width:240px;">
+        <div class="profile-name-row">
+          <h1 class="mb-0" id="pNome">—</h1>
+          <button class="btn btn-secondary btn-sm" id="editProfileBtn">✏️ Editar perfil</button>
+        </div>
+        <p class="mb-0" id="pLocal">—</p>
+        <p id="pBio" style="max-width:560px;"></p>
+        <div class="profile-stats-row">
+          <div><strong id="statPontos">0</strong><span>pontos</span></div>
+          <div><strong id="statAvaliacao">5.0★</strong><span>avaliação média</span></div>
+          <div><strong id="statAnunciados">0</strong><span>livros anunciados</span></div>
+          <div><strong id="statTrocas">0</strong><span>trocas concluídas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container profile-body">
+  <div class="tabs" id="profileTabs">
+    <button class="active" data-tab="anunciados">Livros anunciados</button>
+    <button data-tab="historico">Histórico de trocas</button>
+    <button data-tab="favoritos">Favoritos</button>
+    <button data-tab="lidos">Já lidos</button>
+    <button data-tab="generos">Gêneros favoritos</button>
+  </div>
+
+  <div class="tab-panel" id="panel-anunciados" style="padding-top:28px;">
+    <div class="book-grid" id="gridAnunciados"></div>
+  </div>
+  <div class="tab-panel" id="panel-historico" style="padding-top:28px;display:none;">
+    <div id="listHistorico"></div>
+  </div>
+  <div class="tab-panel" id="panel-favoritos" style="padding-top:28px;display:none;">
+    <div class="book-grid" id="gridFavoritos"></div>
+  </div>
+  <div class="tab-panel" id="panel-lidos" style="padding-top:28px;display:none;">
+    <div class="book-grid" id="gridLidos"></div>
+  </div>
+  <div class="tab-panel" id="panel-generos" style="padding-top:28px;display:none;">
+    <div class="profile-genres" id="genreList"></div>
+  </div>
+</main>
+
+<div id="footer-root"></div>
+<script type="module" src="js/perfil.js"></script>
+</body>
+</html>

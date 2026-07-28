@@ -1,0 +1,15 @@
+.profile-header {
+  padding: calc(var(--header-h) + 40px) 0 40px;
+  background: linear-gradient(180deg, var(--sage-light), var(--bg) 90%);
+}
+[data-theme="dark"] .profile-header { background: linear-gradient(180deg, var(--bg-alt), var(--bg) 90%); }
+.profile-top {
+  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+}
+.profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: var(--shadow-md); }
+.profile-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.profile-stats-row { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
+.profile-stats-row div strong { display: block; font-family: var(--font-heading); font-size: 1.3rem; }
+.profile-stats-row div span { font-size: 0.8rem; color: var(--text-muted); }
+.profile-body { padding: 40px 0 72px; }
+.profile-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }

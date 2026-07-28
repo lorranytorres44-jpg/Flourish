@@ -1,0 +1,61 @@
+.auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.auth-visual {
+  background: linear-gradient(160deg, var(--sage), var(--sage-dark));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  color: var(--accent-contrast);
+  position: relative;
+  overflow: hidden;
+}
+.auth-visual::before {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  top: -100px; left: -100px;
+}
+.auth-visual h2 { color: var(--accent-contrast); position: relative; z-index: 1; }
+.auth-visual p { color: color-mix(in srgb, var(--accent-contrast) 80%, transparent); max-width: 380px; position: relative; z-index: 1; }
+.auth-visual .quote-card {
+  background: rgba(255,255,255,0.5);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-top: 30px;
+  max-width: 360px;
+  position: relative; z-index: 1;
+}
+.auth-form-side {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px;
+}
+.auth-box { width: 100%; max-width: 420px; }
+.auth-box .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; color: var(--text-muted); font-size: 0.9rem; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--text-muted); font-size: 0.85rem; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border); background: var(--bg-alt); color: var(--text);
+  font-weight: 600;
+}
+.btn-google:hover { background: var(--sage-light); }
+.auth-foot-link { text-align: center; margin-top: 22px; font-size: 0.92rem; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.avatar-upload {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+}
+.avatar-upload img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+.password-strength { height: 5px; border-radius: 4px; background: var(--border); margin-top: 8px; overflow: hidden; }
+.password-strength span { display: block; height: 100%; width: 0%; background: var(--danger); transition: width .3s ease, background .3s ease; }
+
+@media (max-width: 900px) {
+  .auth-wrap { grid-template-columns: 1fr; }
+  .auth-visual { display: none; }
+}

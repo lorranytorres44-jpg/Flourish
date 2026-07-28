@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anunciar Livro — Flourish</title>
+<meta name="description" content="Cadastre um livro para troca informando o ISBN ou preenchendo manualmente.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/cadastrar-livro.css">
+</head>
+<body>
+<div id="navbar-root"></div>
+
+<main class="container form-page">
+  <h1>Anunciar um livro</h1>
+  <p class="text-muted">Compartilhe um livro da sua estante com a comunidade e ganhe pontos.</p>
+
+  <div class="mode-switch">
+    <button type="button" class="active" data-mode="isbn"><img src="assets/lupa.png" alt="" width="24" height="24"> Buscar por ISBN</button>
+    <button type="button" data-mode="manual"><img src="assets/pena.png" alt="" width="24" height="24"> Cadastro manual</button>
+  </div>
+
+  <div class="card" style="padding:28px;">
+    <div id="isbnSection">
+      <h3 class="form-section-title">Buscar pelo ISBN</h3>
+      <p class="text-muted" style="margin-top:-8px;">Informe o ISBN (com ou sem hífens) para preencher automaticamente título, autor, editora, ano, páginas, sinopse e capa.</p>
+      <div class="isbn-lookup">
+        <input class="input" type="text" id="isbnInput" placeholder="Ex: 9780007458424">
+        <button class="btn btn-primary" id="isbnSearchBtn">Buscar</button>
+      </div>
+      <p class="hint" id="isbnStatus"></p>
+      <div class="card book-preview" id="bookPreview">
+        <img id="previewCapa" src="" alt="Capa encontrada">
+        <div>
+          <strong id="previewTitulo"></strong>
+          <p class="mb-0 text-muted" id="previewAutor"></p>
+          <p class="mb-0 text-muted" id="previewMeta" style="font-size:0.85rem;"></p>
+          <button type="button" class="btn btn-secondary btn-sm" id="removeCapaBtn" style="margin-top:8px;">Remover capa encontrada</button>
+        </div>
+      </div>
+    </div>
+
+    <form id="bookForm">
+      <h3 class="form-section-title">Informações do livro</h3>
+      <div class="field">
+        <label for="titulo">Título *</label>
+        <input class="input" type="text" id="titulo" required>
+      </div>
+      <div class="field">
+        <label for="autor">Autor *</label>
+        <input class="input" type="text" id="autor" required>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label for="editora">Editora</label>
+          <input class="input" type="text" id="editora">
+        </div>
+        <div class="field">
+          <label for="edicao">Edição</label>
+          <input class="input" type="text" inputmode="numeric" id="edicao" placeholder="Ex: 3ª edição">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label for="ano">Ano da edição</label>
+          <input class="input" type="number" id="ano" min="1400" max="2100">
+        </div>
+        <div class="field">
+          <label for="paginas">Número de páginas</label>
+          <input class="input" type="number" id="paginas" min="1">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label id="generoLabel">Gênero *</label>
+          <div class="custom-select" id="generoSelect">
+            <button type="button" class="input custom-select-trigger" id="generoTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="generoLabel">
+              <span id="generoTriggerText">Selecione</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="custom-select-panel" id="generoPanel" role="listbox" aria-multiselectable="true"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="nacionalidade">Nacional ou Internacional *</label>
+          <select class="input" id="nacionalidade" required>
+            <option value="" disabled selected>Selecione</option>
+            <option value="Nacional">Nacional</option>
+            <option value="Internacional">Internacional</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="sinopse">Sinopse</label>
+        <textarea class="input" id="sinopse" rows="4"></textarea>
+      </div>
+
+      <h3 class="form-section-title">Estado de conservação</h3>
+      <div class="row-2">
+        <div class="field">
+          <label for="estadoConservacao">Estado de conservação *</label>
+          <select class="input" id="estadoConservacao" required><option value="" disabled selected>Selecione</option></select>
+        </div>
+        <div class="field">
+          <label for="tempoUso">Tempo de uso</label>
+          <input class="input" type="text" id="tempoUso" placeholder="Ex: 2 anos">
+        </div>
+      </div>
+      <div class="field">
+        <label for="observacoes">Observações *</label>
+        <textarea class="input" id="observacoes" rows="3" placeholder="Ex: pequena marca de água na capa, sem grifos internos..."></textarea>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:8px;">
+          <input type="checkbox" id="semDanificacoes">
+          Sem danificações relevantes
+        </label>
+      </div>
+
+      <h3 class="form-section-title">Fotos reais do livro *</h3>
+      <p class="hint" style="margin-top:-8px;margin-bottom:12px;">Adicione ao menos uma foto real para transmitir mais confiança aos interessados.</p>
+      <div class="photo-upload-grid" id="photoGrid">
+        <label class="photo-slot" for="photoInput">＋<input type="file" id="photoInput" accept="image/*" multiple class="visually-hidden"></label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:24px;">Publicar livro (+1 ponto)</button>
+    </form>
+  </div>
+</main>
+
+<div id="footer-root"></div>
+<script type="module" src="js/cadastrar-livro.js"></script>
+</body>
+</html>

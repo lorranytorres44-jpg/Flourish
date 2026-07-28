@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Área — Flourish</title>
+<meta name="description" content="Acompanhe suas trocas, pontos, notificações e configurações na Flourish.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/dashboard.css">
+</head>
+<body>
+<div id="navbar-root"></div>
+
+<div class="dash-wrap">
+  <aside class="dash-sidebar" aria-label="Navegação da minha área">
+    <button class="active" data-section="visao">📊 Visão Geral</button>
+    <button data-section="trocas">🔄 Minhas Trocas</button>
+    <button data-section="anunciados">📚 Livros Anunciados</button>
+    <button data-section="favoritos">♥ Favoritos</button>
+    <button data-section="pontos">⭐ Meus Pontos</button>
+    <button data-section="notificacoes">🔔 Notificações</button>
+    <button data-section="config">⚙️ Configurações</button>
+  </aside>
+
+  <main class="dash-main">
+    <section class="dash-section active" id="section-visao">
+      <h1>Olá, <span id="userFirstName">leitor(a)</span> 👋</h1>
+      <div class="overview-cards">
+        <div class="card overview-card overview-card-highlight"><div class="num" id="ovPontos">0</div><div class="label">pontos</div></div>
+        <div class="card overview-card"><div class="num" id="ovTrocasAtivas">0</div><div class="label">trocas em andamento</div></div>
+        <div class="card overview-card"><div class="num" id="ovAnunciados">0</div><div class="label">livros anunciados</div></div>
+        <div class="card overview-card"><div class="num" id="ovFavoritos">0</div><div class="label">favoritos</div></div>
+      </div>
+
+      <h2>Recomendado para você</h2>
+      <div class="book-grid" id="gridRecomendados"></div>
+    </section>
+
+    <section class="dash-section" id="section-trocas">
+      <h1>Minhas trocas</h1>
+      <p class="text-muted">Acompanhe o status, converse pelo chat e veja o rastreamento de cada troca.</p>
+      <div id="tradesList"></div>
+    </section>
+
+    <section class="dash-section" id="section-anunciados">
+      <h1>Livros anunciados</h1>
+      <div class="flex justify-between items-center" style="margin-bottom:16px;">
+        <p class="text-muted mb-0">Livros que você colocou disponíveis para troca.</p>
+        <a href="cadastrar-livro.html" class="btn btn-primary btn-sm">➕ Anunciar livro</a>
+      </div>
+      <div class="book-grid" id="gridAnunciadosDash"></div>
+    </section>
+
+    <section class="dash-section" id="section-favoritos">
+      <h1>Favoritos</h1>
+      <p class="text-muted">Livros que você marcou como favoritos pela plataforma.</p>
+      <div class="book-grid" id="gridFavoritosDash"></div>
+    </section>
+
+    <section class="dash-section" id="section-pontos">
+      <h1>Meus Pontos</h1>
+      <div class="card" style="padding:28px;margin-bottom:24px;">
+        <p class="text-muted mb-0">Saldo atual</p>
+        <div style="font-family:var(--font-heading);font-size:2.4rem;font-weight:700;" id="pontosSaldo">0 pontos</div>
+      </div>
+      <h3>Como ganhar pontos</h3>
+      <ul style="display:flex;flex-direction:column;gap:8px;color:var(--text-muted);margin-bottom:24px;">
+        <li>✅ Criar conta: <strong>+5</strong></li>
+        <li>📚 Anunciar um livro: <strong>+1</strong></li>
+        <li>🔄 Concluir uma troca: <strong>+2</strong>
+          <span class="info-tip" tabindex="0" data-tip="Vale tanto para quem envia quanto para quem recebe o livro na troca.">ⓘ</span>
+        </li>
+        <li>⭐ Receber avaliação positiva: <strong>+1</strong></li>
+        <li>❌ Cancelar troca sem justificativa: <strong>-2</strong></li>
+      </ul>
+    </section>
+
+    <section class="dash-section" id="section-notificacoes">
+      <h1>Notificações</h1>
+      <div id="notifListDash"></div>
+    </section>
+
+    <section class="dash-section" id="section-config">
+      <h1>Configurações</h1>
+      <div class="settings-grid">
+        <div class="card" style="padding:20px;">
+          <h3>Aparência</h3>
+          <label style="display:flex;align-items:center;gap:10px;font-weight:400;">
+            <input type="checkbox" id="darkModeToggle"> Ativar modo escuro
+          </label>
+        </div>
+        <div class="card" style="padding:20px;">
+          <h3>Notificações</h3>
+          <label style="display:flex;align-items:center;gap:10px;font-weight:400;margin-bottom:10px;"><input type="checkbox" checked> Nova proposta de troca</label>
+          <label style="display:flex;align-items:center;gap:10px;font-weight:400;"><input type="checkbox" checked> Mensagens do chat</label>
+        </div>
+        <button class="btn btn-secondary" id="logoutBtnDash" style="max-width:200px;">Sair da conta</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
