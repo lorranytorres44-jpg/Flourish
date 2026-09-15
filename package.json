@@ -4,6 +4,7 @@
   "description": "Flowrish — troca de livros (site estático + Firebase)",
   "type": "module",
   "scripts": {
+    "start": "node server.js",
     "test": "vitest run tests/unit",
     "test:watch": "vitest tests/unit",
     "test:rules": "node tests/rules/run.js",
