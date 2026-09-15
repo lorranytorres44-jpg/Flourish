@@ -26,7 +26,7 @@ if (!book) {
     </div>`;
 } else {
   const owner = await getOwnerInfo(book.ownerId);
-  document.title = `${book.titulo} — Flourish`;
+  document.title = `${book.titulo} — Flowrish`;
   const fotos = book.fotos?.length ? book.fotos : [book.capa];
 
   // Avaliações do perfil do anunciante (não do livro específico)

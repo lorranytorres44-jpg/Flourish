@@ -60,7 +60,7 @@ export function renderNavbar(activePage = '') {
           <span class="logo-mark" aria-hidden="true">
             <img src="assets/livro-logo.png" width="20" height="20" alt="">
           </span>
-          <span class="logo-text">Flourish</span>
+          <span class="logo-text">Flowrish</span>
         </a>
         <nav class="nav-links" aria-label="Navegação principal">${linksHTML}</nav>
         <form class="nav-search" role="search" id="navSearchForm">
@@ -187,7 +187,7 @@ export function renderFooter() {
               <span class="logo-mark" aria-hidden="true" style="background:rgba(255,255,255,0.15);">
                 <img src="assets/livro-logo.png" width="20" height="20" alt="">
               </span>
-              Flourish
+              Flowrish
             </div>
             <p>Uma comunidade de leitores que acredita que todo livro merece ser lido mais de uma vez, por mais de uma pessoa.</p>
             <div class="footer-social">
@@ -211,7 +211,7 @@ export function renderFooter() {
           </div>
         </div>
         <div class="footer-bottom">
-          <span>© ${new Date().getFullYear()} Flourish. Todos os direitos reservados.</span>
+          <span>© ${new Date().getFullYear()} Flowrish. Todos os direitos reservados.</span>
           <span>Feito com 💚 para leitores.</span>
         </div>
       </div>

@@ -13,3 +13,4 @@
 .profile-stats-row div span { font-size: 0.8rem; color: var(--text-muted); }
 .profile-body { padding: 40px 0 72px; }
 .profile-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+

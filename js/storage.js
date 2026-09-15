@@ -3,7 +3,8 @@
 // Único ponto de contato com persistência: qualquer troca de provedor
 // (ou volta a um backend próprio) deve mexer só neste arquivo.
 // ============================================
-import { auth, db } from './firebase.js';
+import { app, auth, db } from './firebase.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
@@ -280,10 +281,22 @@ export async function getOwnerInfo(ownerId) {
 }
 
 // -------- Trocas --------
+// O dono avança até "Chegada na agência" (ou os Correios avançam por ele);
+// "Finalizada" só o solicitante marca, ao retirar o livro — e aí avalia a troca.
 export const TRADE_STATUS = [
-  'Solicitação enviada', 'Em análise', 'Aceita', 'Aguardando postagem',
-  'Em transporte', 'Entregue', 'Finalizada', 'Cancelada'
+  'Solicitação enviada', 'Aceita', 'Postada', 'Em rota',
+  'Chegada na agência', 'Finalizada', 'Cancelada'
 ];
+export const STATUS_FINAL = 'Finalizada';
+export const STATUS_CHEGADA = 'Chegada na agência';
+// Nomes antigos de status que ainda podem existir em trocas já salvas no Firestore.
+// "Entregue" era o fim da troca (pontos dados, livros removidos), então vira "Finalizada".
+const LEGACY_STATUS = {
+  'Em análise': 'Solicitação enviada',
+  'Aguardando postagem': 'Postada',
+  'Em transporte': 'Em rota',
+  'Entregue': 'Finalizada',
+};
 
 export async function getTrades() {
   if (!cachedUser) return [];
@@ -295,6 +308,8 @@ export async function getTrades() {
   const map = new Map();
   asRequester.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
   asOwner.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
+  // Trocas antigas ainda podem estar salvas com o nome anterior do status.
+  map.forEach(t => { t.status = LEGACY_STATUS[t.status] || t.status; });
   return [...map.values()].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 }
 
@@ -347,22 +362,37 @@ function otherPartyId(trade) {
 }
 export { otherPartyId };
 
+// Avança uma etapa (uso do dono do livro). Para no "Chegada na agência" — a
+// finalização é do solicitante, em finalizeTrade().
 export async function advanceTradeStatus(tradeId) {
   const snap = await getDoc(doc(db, 'trades', tradeId));
   if (!snap.exists()) return null;
   const trade = { id: snap.id, ...snap.data() };
+  trade.status = LEGACY_STATUS[trade.status] || trade.status;
   const idx = TRADE_STATUS.indexOf(trade.status);
-  const next = TRADE_STATUS[Math.min(idx + 1, TRADE_STATUS.length - 2)];
-  const patch = { status: next };
-  if (next === 'Finalizada') patch.finalizadoEm = serverTimestamp();
-  const updated = await updateTrade(tradeId, patch);
+  const next = TRADE_STATUS[Math.min(idx + 1, TRADE_STATUS.indexOf(STATUS_CHEGADA))];
+  if (next === trade.status) return trade;
+  const updated = await updateTrade(tradeId, { status: next });
   await addNotification('Atualização de troca', `"${trade.bookTitulo}" agora está: ${next}`, 'troca');
-  await addNotificationFor(otherPartyId(trade), 'Atualização de troca', `"${trade.bookTitulo}" agora está: ${next}`, 'troca');
-  if (next === 'Finalizada') {
-    await addPoints(PONTOS_REGRAS.CONCLUIR_TROCA, 'troca concluída');
-    const idsToRemove = [trade.bookId, ...(trade.livrosOferecidos || [])];
-    await Promise.all(idsToRemove.map(id => deleteDoc(doc(db, 'books', id)).catch(() => {})));
-  }
+  const textoOutro = next === STATUS_CHEGADA
+    ? `"${trade.bookTitulo}" chegou na agência dos Correios. Retire o livro e finalize a troca.`
+    : `"${trade.bookTitulo}" agora está: ${next}`;
+  await addNotificationFor(otherPartyId(trade), 'Atualização de troca', textoOutro, 'troca');
+  return updated;
+}
+
+// O solicitante retirou o livro: encerra a troca (pontos, remoção dos livros
+// anunciados, data de finalização usada na limpeza do chat).
+export async function finalizeTrade(tradeId) {
+  const snap = await getDoc(doc(db, 'trades', tradeId));
+  if (!snap.exists()) return null;
+  const trade = { id: snap.id, ...snap.data() };
+  const updated = await updateTrade(tradeId, { status: STATUS_FINAL, finalizadoEm: serverTimestamp() });
+  await addNotification('Troca finalizada', `"${trade.bookTitulo}" foi finalizada. Avalie a troca!`, 'troca');
+  await addNotificationFor(otherPartyId(trade), 'Troca finalizada', `${cachedSession?.nome || 'O solicitante'} retirou "${trade.bookTitulo}" e finalizou a troca. Avalie a troca!`, 'troca');
+  await addPoints(PONTOS_REGRAS.CONCLUIR_TROCA, 'troca concluída');
+  const idsToRemove = [trade.bookId, ...(trade.livrosOferecidos || [])];
+  await Promise.all(idsToRemove.map(id => deleteDoc(doc(db, 'books', id)).catch(() => {})));
   return updated;
 }
 
@@ -376,6 +406,64 @@ export async function cancelTrade(tradeId, comJustificativa = true) {
   await addNotification('Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
   if (trade) await addNotificationFor(otherPartyId(trade), 'Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
   return updated;
+}
+
+// -------- Correios: agência de retirada e rastreio --------
+
+// Agência preferida do usuário, reaproveitada nas próximas trocas. Fica em
+// users/{uid}/private (só o dono lê) porque guarda telefone e nome completo —
+// o documento do perfil é público.
+export async function getSavedAgencia() {
+  if (!cachedUser) return null;
+  const snap = await getDoc(doc(db, 'users', cachedUser.uid, 'private', 'agencia'));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveAgencia(agencia) {
+  if (!cachedUser) return null;
+  const data = { ...agencia, salvaEm: new Date().toISOString() };
+  await setDoc(doc(db, 'users', cachedUser.uid, 'private', 'agencia'), data);
+  return data;
+}
+
+// O solicitante escolhe em qual agência dos Correios vai retirar o livro; fica
+// gravado na própria troca, então os dois lados veem (o dono posta para lá).
+export async function setTradeAgencia(trade, agencia) {
+  const agenciaRetirada = { ...agencia, escolhidaPor: cachedUser.uid, escolhidaEm: new Date().toISOString() };
+  const updated = await updateTrade(trade.id, { agenciaRetirada });
+  await addNotificationFor(
+    otherPartyId(trade), 'Agência de retirada escolhida',
+    `${cachedSession?.nome || 'O solicitante'} vai retirar "${trade.bookTitulo}" em: ${agencia.nome}.`, 'troca',
+  );
+  return updated;
+}
+
+// Salva código/transportadora sem apagar o que o servidor já gravou (último
+// evento, histórico). Quando o dono informa o código de uma troca "Aceita", a
+// troca vira "Postada" na hora — o rastreio automático cuida do resto.
+export async function saveTradeTracking(trade, { codigo, transportadora }) {
+  const codigoAntigo = trade.rastreio?.codigo || '';
+  const patch = { 'rastreio.codigo': codigo, 'rastreio.transportadora': transportadora };
+  if (codigo && codigo !== codigoAntigo) {
+    // Código novo: o evento guardado era do objeto anterior.
+    patch['rastreio.ultimoEvento'] = null;
+    patch['rastreio.consultadoEm'] = null;
+  }
+  let updated = await updateTrade(trade.id, patch);
+  if (codigo && codigo !== codigoAntigo) {
+    await addNotificationFor(otherPartyId(trade), 'Código de rastreio informado', `"${trade.bookTitulo}": ${codigo}`, 'troca');
+    if (trade.ownerId === cachedUser?.uid && trade.status === 'Aceita') {
+      updated = await advanceTradeStatus(trade.id);
+    }
+  }
+  return updated;
+}
+
+// Pede ao servidor para consultar os Correios agora (Cloud Function consultarRastreio).
+export async function refreshTradeTracking(tradeId) {
+  const consultar = httpsCallable(getFunctions(app, 'us-central1'), 'consultarRastreio');
+  const result = await consultar({ tradeId });
+  return result.data;
 }
 
 // Escuta as mensagens de uma troca em tempo real — callback é chamado de novo
@@ -401,7 +489,7 @@ export async function sendChatMessage(trade, texto) {
 // caso de problema na entrega antes de o histórico sumir.
 const PRAZO_CARENCIA_CHAT_DIAS = 14;
 export async function cleanupExpiredMessages(trade) {
-  if (trade.status !== 'Finalizada' || !trade.finalizadoEm) return;
+  if (trade.status !== STATUS_FINAL || !trade.finalizadoEm) return;
   const finalizadoEmMs = trade.finalizadoEm.toMillis ? trade.finalizadoEm.toMillis() : new Date(trade.finalizadoEm).getTime();
   const diasPassados = (Date.now() - finalizadoEmMs) / 86400000;
   if (diasPassados < PRAZO_CARENCIA_CHAT_DIAS) return;

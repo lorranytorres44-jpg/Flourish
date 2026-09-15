@@ -1,7 +1,7 @@
 import { GENEROS } from './data.js';
 import {
   getSession, updateSession, isLoggedIn, getPoints, getMyBooks, getTrades,
-  getFavorites, getReadList, getAnyBookById, getRatingsForUser, ratingScore, authReady,
+  getFavorites, getAnyBookById, getRatingsForUser, ratingScore, authReady,
 } from './storage.js';
 import { renderNavbar, renderFooter, requireLoginModal } from './navbar.js';
 import { renderBookGrid, initRevealAnimations } from './book-card.js';
@@ -42,14 +42,22 @@ function renderHeader() {
 renderHeader();
 
 // Tabs
+function showTab(tab) {
+  const btn = document.querySelector(`#profileTabs button[data-tab="${tab}"]`);
+  if (!btn) return;
+  document.querySelectorAll('#profileTabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`panel-${tab}`).style.display = 'block';
+}
 document.querySelectorAll('#profileTabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#profileTabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-    document.getElementById(`panel-${btn.dataset.tab}`).style.display = 'block';
-  });
+  btn.addEventListener('click', () => showTab(btn.dataset.tab));
 });
+// Links externos podem abrir direto numa aba via #hash (ex: perfil.html#favoritos).
+if (location.hash) {
+  showTab(location.hash.slice(1));
+  document.getElementById('profileTabs')?.scrollIntoView({ block: 'start' });
+}
 
 const myBooks = await getMyBooks();
 document.getElementById('statAnunciados').textContent = myBooks.length;
@@ -57,8 +65,6 @@ document.getElementById('statAnunciados').textContent = myBooks.length;
 await renderBookGrid(document.getElementById('gridAnunciados'), myBooks, 'Você ainda não anunciou nenhum livro.');
 const favBooks = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
 await renderBookGrid(document.getElementById('gridFavoritos'), favBooks, 'Você ainda não favoritou nenhum livro.');
-const readBooks = (await Promise.all(getReadList().map(getAnyBookById))).filter(Boolean);
-await renderBookGrid(document.getElementById('gridLidos'), readBooks, 'Nenhum livro marcado como lido ainda.');
 
 function renderGenreList() {
   document.getElementById('genreList').innerHTML = GENEROS.map(g => {
@@ -139,10 +145,12 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
       e.preventDefault();
       const submitBtn = e.target.querySelector('button[type=submit]');
       submitBtn.disabled = true;
+      const cidade = overlay.querySelector('#editCidade').value.trim();
+      const estado = estadoSelect.value;
       session = await updateSession({
         nome: overlay.querySelector('#editNome').value.trim() || session.nome,
-        cidade: overlay.querySelector('#editCidade').value.trim(),
-        estado: estadoSelect.value,
+        cidade,
+        estado,
         bio: overlay.querySelector('#editBio').value.trim(),
         generosFavoritos: [...selected],
         foto: novaFoto,
