@@ -247,8 +247,8 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
     pontosNecessarios: 3,
   };
 
-  if (!book.titulo || !book.autor || !book.generos.length || !book.nacionalidade || !book.estadoConservacao) {
-    showToast('Preencha os campos obrigatórios', '', 'error');
+  if (!book.titulo || !book.autor || !book.generos.length || !book.nacionalidade || !book.estadoConservacao || !book.sinopse) {
+    showToast('Preencha os campos obrigatórios', 'Título, autor, gênero, nacionalidade, estado de conservação e sinopse são obrigatórios.', 'error');
     return;
   }
 

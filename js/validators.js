@@ -35,3 +35,9 @@ export function isValidTelefone(value) {
 export function isNomeCompleto(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length >= 2;
 }
+
+// Sinopse obrigatória (não pode ser vazia)
+export function isValidSinopse(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+

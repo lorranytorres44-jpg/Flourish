@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { maskCep, isValidCep, maskTelefone, isValidTelefone, isNomeCompleto } from '../../js/validators.js';
+import { maskCep, isValidCep, maskTelefone, isValidTelefone, isNomeCompleto, isValidSinopse } from '../../js/validators.js';
 
 describe('CEP da agência', () => {
   it('aplica a máscara 00000-000 enquanto digita', () => {
@@ -47,5 +47,15 @@ describe('nome completo do destinatário', () => {
     expect(isNomeCompleto('Lorrany')).toBe(false);
     expect(isNomeCompleto('   ')).toBe(false);
     expect(isNomeCompleto(undefined)).toBe(false);
+  });
+});
+
+describe('sinopse obrigatória', () => {
+  it('exige texto preenchido', () => {
+    expect(isValidSinopse('Uma história envolvente sobre magia e mistério.')).toBe(true);
+    expect(isValidSinopse('')).toBe(false);
+    expect(isValidSinopse('   ')).toBe(false);
+    expect(isValidSinopse(null)).toBe(false);
+    expect(isValidSinopse(undefined)).toBe(false);
   });
 });
