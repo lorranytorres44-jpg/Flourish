@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 > nul
 echo ========================================================
 echo   Flowrish - Sincronizacao com GitHub e Render
@@ -17,14 +17,16 @@ if "%msg%"=="" set msg=Atualizacoes no site Flowrish
 
 git commit -m "%msg%"
 echo.
-echo Enviando para a branch MVP no GitHub...
-git push -u origin MVP
+echo Enviando para o GitHub e atualizando o Render...
+git push origin MVP
+git push myfork MVP
+git push myfork MVP:main
 echo.
 if %ERRORLEVEL% equ 0 (
     echo ========================================================
-    echo [SUCESSO] Codigo enviado para o GitHub com sucesso!
-    echo O Render vai detectar as alteracoes e atualizar o site
-    echo automaticamente em cerca de 1 a 2 minutos.
+    echo [SUCESSO] Codigo enviado com sucesso!
+    echo O Render ja detectou a atualizacao em:
+    echo https://flourish-aeuk.onrender.com
     echo ========================================================
 ) else (
     echo [ERRO] Ocorreu uma falha ao enviar para o GitHub.
