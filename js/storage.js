@@ -46,49 +46,85 @@ onAuthStateChanged(auth, async (user) => {
     cachedReadList = new Set();
     cachedNotifications = [];
   } else {
-    const ref = doc(db, 'users', user.uid);
-    let snap = await getDoc(ref);
-    if (!snap.exists()) {
-      // Cadastro recém-criado: o documento pode ainda estar sendo gravado
-      // (ver createUserDoc). Espera um instante e tenta de novo antes de
-      // cair nos valores padrão, evitando sobrescrever com dados vazios.
-      await new Promise(r => setTimeout(r, 500));
-      snap = await getDoc(ref);
-    }
-    const data = snap.exists() ? snap.data() : {};
-    cachedPoints = data.pontos ?? 0;
+    // Inicialização imediata e síncrona com os dados do Auth para que isLoggedIn()
+    // e getSession() nunca retornem false ou null durante a navegação autenticada
+    cachedSession = {
+      id: user.uid,
+      nome: user.displayName || user.email?.split('@')[0] || 'Leitor(a)',
+      email: user.email || '',
+      foto: user.photoURL || DEFAULT_FOTO,
+      cidade: '',
+      estado: '',
+      bio: 'Ainda não escrevi minha biografia.',
+      generosFavoritos: [],
+    };
+    cachedPoints = cachedPoints ?? 5;
 
-    userDocUnsub = onSnapshot(ref, (docSnap) => {
-      if (docSnap.exists()) {
-        const d = docSnap.data();
+    const ref = doc(db, 'users', user.uid);
+    try {
+      let snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await createUserDoc(user.uid, {
+          nome: user.displayName || user.email?.split('@')[0] || 'Leitor(a)',
+          email: user.email,
+          foto: user.photoURL || DEFAULT_FOTO,
+        });
+        snap = await getDoc(ref);
+      }
+
+      if (snap.exists()) {
+        const d = snap.data();
+        cachedPoints = d.pontos ?? 5;
         cachedSession = {
           id: user.uid,
-          nome: d.nome || 'Leitor(a)',
+          nome: d.nome || user.displayName || user.email?.split('@')[0] || 'Leitor(a)',
           email: d.email || user.email || '',
-          foto: d.foto || DEFAULT_FOTO,
+          foto: d.foto || user.photoURL || DEFAULT_FOTO,
           cidade: d.cidade || '',
           estado: d.estado || '',
           bio: d.bio || 'Ainda não escrevi minha biografia.',
           generosFavoritos: d.generosFavoritos || [],
         };
-        if (d.pontos !== undefined && d.pontos !== cachedPoints) {
-          cachedPoints = d.pontos;
-          window.dispatchEvent(new CustomEvent('tdl:points-changed', { detail: { pontos: cachedPoints } }));
-        }
-        window.dispatchEvent(new CustomEvent('tdl:auth-changed'));
       }
-    });
+    } catch (err) {
+      console.warn('Aviso ao carregar perfil no Firestore:', err);
+    }
 
-    favoritesUnsub = onSnapshot(collection(db, 'users', user.uid, 'favorites'), (qs) => {
-      cachedFavorites = new Set(qs.docs.map(d => d.id));
-    });
-    readListUnsub = onSnapshot(collection(db, 'users', user.uid, 'readList'), (qs) => {
-      cachedReadList = new Set(qs.docs.map(d => d.id));
-    });
-    notifUnsub = onSnapshot(collection(db, 'users', user.uid, 'notifications'), (qs) => {
-      cachedNotifications = qs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
-      window.dispatchEvent(new CustomEvent('tdl:notification'));
-    });
+    try {
+      userDocUnsub = onSnapshot(ref, (docSnap) => {
+        if (docSnap.exists()) {
+          const d = docSnap.data();
+          cachedSession = {
+            id: user.uid,
+            nome: d.nome || user.displayName || 'Leitor(a)',
+            email: d.email || user.email || '',
+            foto: d.foto || user.photoURL || DEFAULT_FOTO,
+            cidade: d.cidade || '',
+            estado: d.estado || '',
+            bio: d.bio || 'Ainda não escrevi minha biografia.',
+            generosFavoritos: d.generosFavoritos || [],
+          };
+          if (d.pontos !== undefined && d.pontos !== cachedPoints) {
+            cachedPoints = d.pontos;
+            window.dispatchEvent(new CustomEvent('tdl:points-changed', { detail: { pontos: cachedPoints } }));
+          }
+          window.dispatchEvent(new CustomEvent('tdl:auth-changed'));
+        }
+      }, (err) => console.warn('Snapshot perfil:', err));
+    } catch (e) {}
+
+    try {
+      favoritesUnsub = onSnapshot(collection(db, 'users', user.uid, 'favorites'), (qs) => {
+        cachedFavorites = new Set(qs.docs.map(d => d.id));
+      }, () => {});
+      readListUnsub = onSnapshot(collection(db, 'users', user.uid, 'readList'), (qs) => {
+        cachedReadList = new Set(qs.docs.map(d => d.id));
+      }, () => {});
+      notifUnsub = onSnapshot(collection(db, 'users', user.uid, 'notifications'), (qs) => {
+        cachedNotifications = qs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+        window.dispatchEvent(new CustomEvent('tdl:notification'));
+      }, () => {});
+    } catch (e) {}
   }
 
   window.dispatchEvent(new CustomEvent('tdl:auth-changed'));
@@ -97,11 +133,25 @@ onAuthStateChanged(auth, async (user) => {
 
 // -------- Sessão / usuário atual --------
 export function getSession() {
-  return cachedSession;
+  if (cachedSession) return cachedSession;
+  const u = auth.currentUser || cachedUser;
+  if (u) {
+    return {
+      id: u.uid,
+      nome: u.displayName || u.email?.split('@')[0] || 'Leitor(a)',
+      email: u.email || '',
+      foto: u.photoURL || DEFAULT_FOTO,
+      cidade: '',
+      estado: '',
+      bio: 'Ainda não escrevi minha biografia.',
+      generosFavoritos: [],
+    };
+  }
+  return null;
 }
 
 export function isLoggedIn() {
-  return !!cachedSession;
+  return !!auth.currentUser || !!cachedUser || !!cachedSession;
 }
 
 // Cria o documento de perfil e já preenche o cache local na hora — não dá pra

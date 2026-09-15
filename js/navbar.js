@@ -1,4 +1,4 @@
-import { getSession, logout, getPoints, getNotifications, unreadCount, markNotificationsRead } from './storage.js';
+import { getSession, logout, getPoints, getNotifications, unreadCount, markNotificationsRead, isLoggedIn } from './storage.js';
 import { openModal } from './modal.js';
 
 const NAV_LINKS = [
@@ -16,13 +16,16 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)} d atrás`;
 }
 
+let currentActiveNavPage = '';
+
 export function renderNavbar(activePage = '') {
+  if (activePage) currentActiveNavPage = activePage;
   const root = document.getElementById('navbar-root');
   if (!root) return;
   const session = getSession();
   const points = getPoints();
 
-  const linksHTML = NAV_LINKS.map(l => `<a href="${l.href}" class="${activePage === l.href ? 'active' : ''}">${l.label}</a>`).join('');
+  const linksHTML = NAV_LINKS.map(l => `<a href="${l.href}" class="${currentActiveNavPage === l.href ? 'active' : ''}">${l.label}</a>`).join('');
 
   const authArea = session
     ? `
@@ -163,6 +166,7 @@ function renderNotifPanel(panel) {
 }
 
 export function requireLoginModal(message = 'Você precisa estar logado para acessar esta área.') {
+  if (isLoggedIn()) return; // Se já está autenticado, nunca abre modal
   openModal(`
     <div class="modal-header">
       <h3 id="loginRequiredTitle">Login necessário</h3>
@@ -218,3 +222,10 @@ export function renderFooter() {
     </footer>
   `;
 }
+
+window.addEventListener('tdl:auth-changed', () => {
+  const root = document.getElementById('navbar-root');
+  if (root && root.innerHTML.trim().length > 0) {
+    renderNavbar(currentActiveNavPage);
+  }
+});

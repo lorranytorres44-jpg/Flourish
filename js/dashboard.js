@@ -33,6 +33,7 @@ renderFooter();
 
 if (!isLoggedIn()) {
   requireLoginModal('Faça login para acessar sua área.');
+  return;
 }
 
 const session = getSession() || {};

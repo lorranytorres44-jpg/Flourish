@@ -21,6 +21,7 @@ renderFooter();
 
 if (!isLoggedIn()) {
   requireLoginModal('Faça login para ver seu perfil.');
+  return;
 }
 
 let session = getSession() || {};
