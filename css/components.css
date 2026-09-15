@@ -421,3 +421,10 @@
 .status-step.current .status-dot { border-color: var(--terracotta); background: var(--terracotta); color: #fff; }
 .status-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
 .status-step.done .status-label, .status-step.current .status-label { color: var(--text); }
+
+/* Stepper vertical (usado nas colunas da troca livro por livro) */
+.status-stepper.vertical { flex-direction: column; }
+.status-stepper.vertical .status-step { display: flex; align-items: center; gap: 12px; text-align: left; min-width: 0; padding: 0 0 18px; }
+.status-stepper.vertical .status-step:last-child { padding-bottom: 0; }
+.status-stepper.vertical .status-step::before { top: -20px; left: 13.5px; width: 3px; height: 24px; }
+.status-stepper.vertical .status-dot { margin: 0; flex-shrink: 0; }

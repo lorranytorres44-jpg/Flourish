@@ -93,7 +93,7 @@ function applyFilters() {
   if (state.estado) books = books.filter(b => ownerMap.get(b.ownerId)?.estado === state.estado);
 
   if (state.ordenacao === 'recentes') books.sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro));
-  if (state.ordenacao === 'populares') books.sort((a, b) => b.interessados - a.interessados);
+  if (state.ordenacao === 'populares') books.sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
   if (state.ordenacao === 'az') books.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
   if (state.ordenacao === 'az-autor') books.sort((a, b) => a.autor.localeCompare(b.autor, 'pt-BR'));
 

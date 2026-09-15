@@ -1,5 +1,5 @@
 // Utilidades dos Correios no navegador: código de rastreio e exibição da agência
-// de retirada. O rastreamento em si roda no servidor (functions/correios.js).
+// de retirada. O acompanhamento do objeto é feito no site dos Correios (trackingUrl).
 //
 // A agência é informada pelo próprio solicitante (consultando o buscador oficial
 // dos Correios) — não existe API pública de agências sem contrato.

@@ -40,11 +40,11 @@ export function renderNavbar(activePage = '') {
           <span>${session.nome.split(' ')[0]}</span>
         </button>
         <div class="dropdown-menu" id="userDropdown">
-          <a href="perfil.html">👤 Meu Perfil</a>
-          <a href="dashboard.html">📊 Minha Área</a>
-          <a href="cadastrar-livro.html">➕ Anunciar Livro</a>
+          <a href="perfil.html">Meu Perfil</a>
+          <a href="dashboard.html">Minha Área</a>
+          <a href="cadastrar-livro.html">Anunciar Livro</a>
           <div class="dropdown-divider"></div>
-          <button id="logoutBtn">🚪 Sair</button>
+          <button id="logoutBtn">Sair</button>
         </div>
       </div>
     `

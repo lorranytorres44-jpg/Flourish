@@ -1,7 +1,8 @@
 import {
   getSession, isLoggedIn, logout, getPoints, getMyBooks, getTrades,
-  getAnyBookById, getOwnerInfo, getAllBooks, TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, advanceTradeStatus, finalizeTrade, cancelTrade, updateTrade,
-  cleanupExpiredMessages, setTradeAgencia, saveTradeTracking, refreshTradeTracking, addNotificationFor, getSavedAgencia, saveAgencia,
+  getAnyBookById, getOwnerInfo, getAllBooks, TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, getEnvios, isDualTrade,
+  advanceTradeStatus, finalizeTrade, cancelTrade, updateTrade,
+  cleanupExpiredMessages, setTradeAgencia, saveTradeTracking, addNotificationFor, getSavedAgencia, saveAgencia,
   sendChatMessage, subscribeChatMessages, getNotifications, getFavorites, getReadList,
   authReady, getTheme, setTheme,
 } from './storage.js';
@@ -13,6 +14,7 @@ import { openRatingModal } from './rating.js';
 import { openModal } from './modal.js';
 import { bookGeneros } from './data.js';
 import { populateEstados } from './auth.js';
+import { maskCep, maskTelefone, isValidCep, isValidTelefone, isNomeCompleto } from './validators.js';
 import {
   CORREIOS_BUSCA_AGENCIAS_URL,
   agenciaResumo, agenciaMapUrl,
@@ -118,95 +120,138 @@ async function renderTrades() {
 
   list.innerHTML = trades.map(trade => {
     const { mainBook, offeredBooks, donoInfo, requesterInfo } = bookInfoByTrade.get(trade.id);
-    const idx = statusIndex(trade.status);
     const isCancelled = trade.status === 'Cancelada';
-    const dl = trade.prazoPostagem ? daysLeft(trade.prazoPostagem) : null;
-    const showDeadline = !isCancelled && !!trade.prazoPostagem && idx < TRADE_STATUS.indexOf('Postada') + 1 && dl <= 15;
-    const souDono = trade.ownerId === session.id;
-
-    // A etapa atual já conta como cumprida: ao "Marcar como: X", o passo X fica verde.
-    const stepperHTML = isCancelled
-      ? `<p style="color:var(--danger);font-weight:600;">❌ Troca cancelada</p>`
-      : `<div class="status-stepper">
-          ${TRADE_STATUS.slice(0, 6).map((s, i) => `
-            <div class="status-step ${i <= idx ? 'done' : ''}">
-              <div class="status-dot">${i <= idx ? '✓' : i + 1}</div>
-              <div class="status-label">${s}</div>
-            </div>
-          `).join('')}
-        </div>`;
-
     const isFinal = trade.status === STATUS_FINAL;
-    // O dono avança até "Chegada na agência"; quem finaliza é o solicitante, ao retirar o livro.
-    const nextStatus = TRADE_STATUS[Math.min(idx + 1, TRADE_STATUS.indexOf(STATUS_CHEGADA))];
-    const podeFinalizar = !souDono && trade.status === STATUS_CHEGADA;
+    const souDono = trade.ownerId === session.id;
+    const dual = isDualTrade(trade);
     const pendingDecision = souDono && trade.status === 'Solicitação enviada';
 
-    // Agência dos Correios onde o solicitante vai retirar: ele escolhe (e pode
-    // trocar) enquanto o livro não foi postado; os dois lados veem a escolha.
-    const agencia = trade.agenciaRetirada;
-    const podeEscolherAgencia = !souDono && !isCancelled && idx < TRADE_STATUS.indexOf('Postada');
-    let agenciaHTML = '';
-    if (agencia) {
-      agenciaHTML = `
-        <div class="trade-agencia">
-          <div class="trade-agencia-info">
-            <strong>📍 Retirada nos Correios</strong>
-            <p class="mb-0">${agenciaResumo(agencia)}</p>
-            ${agencia.cep ? `<p class="mb-0 text-muted">CEP ${agencia.cep}</p>` : ''}
-            ${agencia.telefone ? `<p class="mb-0 text-muted">Destinatário: ${agencia.destinatario || trade.requesterNome || 'Solicitante'} · ${agencia.telefone}</p>` : ''}
-            ${agencia.horario ? `<p class="mb-0 text-muted">Horário: ${agencia.horario}</p>` : ''}
-            ${agenciaMapUrl(agencia) ? `<a href="${agenciaMapUrl(agencia)}" target="_blank" rel="noopener" class="agencia-map-link">Ver no mapa ↗</a>` : ''}
-          </div>
-          ${podeEscolherAgencia ? `<button class="btn btn-ghost btn-sm" data-action="agencia">Trocar agência</button>` : ''}
-        </div>`;
-    } else if (podeEscolherAgencia) {
-      agenciaHTML = `
-        <div class="trade-agencia ${trade.status === 'Aceita' ? 'trade-agencia-pending' : ''}">
-          <div class="trade-agencia-info">
-            <strong>📍 Onde você vai retirar o livro?</strong>
-            <p class="mb-0 text-muted">O local escolhido será o local de retirada do livro.</p>
-          </div>
-          <button class="btn ${trade.status === 'Aceita' ? 'btn-primary' : 'btn-secondary'} btn-sm" data-action="agencia">Escolher agência</button>
-        </div>`;
-    } else if (souDono && trade.status === 'Aceita') {
-      agenciaHTML = `<p class="trade-agencia-waiting mb-0">📍 Aguardando o solicitante escolher a agência dos Correios para retirada.</p>`;
-    }
+    // Livro por livro: dois envios, cada um com agência, etapas e rastreio
+    // próprios. O livro do usuário logado (o que ele envia) vem primeiro, na
+    // mesma ordem da linha de capas.
+    const envios = getEnvios(trade).sort((a, b) => (a.remetenteId === session.id ? 0 : 1) - (b.remetenteId === session.id ? 0 : 1));
+    const dl = trade.prazoPostagem ? daysLeft(trade.prazoPostagem) : null;
+    const aguardandoPostagem = envios.some(e => statusIndex(e.status) <= statusIndex('Postada'));
+    const showDeadline = !isCancelled && !!trade.prazoPostagem && aguardandoPostagem && dl <= 15;
 
-    const rastreio = trade.rastreio || {};
-    const codigoValido = isValidTrackingCode(rastreio.codigo);
-    const ultimoEvento = rastreio.ultimoEvento;
-    const historico = [...(rastreio.historico || [])].reverse().slice(0, 5);
-    const trackingHTML = `
-      ${souDono && !isCancelled && !isFinal ? `
-        <p class="mb-0"><strong>Transportadora:</strong> Correios</p>
-        <div class="field" style="margin-top:10px;">
-          <label>Código de rastreio dos Correios</label>
-          <input class="input" type="text" placeholder="Ex: AA123456789BR" value="${rastreio.codigo || ''}" data-tracking-code>
-        </div>
-        <button class="btn btn-secondary btn-sm" data-save-tracking>Salvar código de rastreio</button>
-        ${trade.status === 'Aceita' ? `<p class="hint">Ao informar o código dos Correios a troca passa para "Postada" automaticamente.</p>` : ''}
-      ` : `
-        <p class="mb-0"><strong>Transportadora:</strong> Correios</p>
-        <p class="mb-0"><strong>Código de rastreio:</strong> ${rastreio.codigo || 'ainda não informado pelo anunciante'}</p>
-      `}
-      ${codigoValido ? `
-        <div class="tracking-event">
-          ${ultimoEvento ? `
-            <strong>${ultimoEvento.descricao}</strong>
-            ${ultimoEvento.local ? `<p class="mb-0 text-muted">${ultimoEvento.local}</p>` : ''}
-            ${ultimoEvento.data ? `<p class="mb-0 text-muted">${new Date(ultimoEvento.data).toLocaleString('pt-BR')}</p>` : ''}
-          ` : `<p class="mb-0 text-muted">Ainda sem eventos dos Correios para este código.</p>`}
-          ${rastreio.consultadoEm ? `<p class="mb-0 hint">Consultado em ${new Date(rastreio.consultadoEm).toLocaleString('pt-BR')}</p>` : ''}
-        </div>
-        ${historico.length ? `<ul class="tracking-history">${historico.map(h => `<li>${h.data ? `<span>${new Date(h.data).toLocaleString('pt-BR')}</span> ` : ''}${h.texto}</li>`).join('')}</ul>` : ''}
-        <div class="tracking-actions">
-          ${!isCancelled && !isFinal ? `<button class="btn btn-secondary btn-sm" data-refresh-tracking>🔄 Atualizar agora</button>` : ''}
-          <a class="btn btn-ghost btn-sm" href="${trackingUrl(rastreio.codigo)}" target="_blank" rel="noopener">Ver no site dos Correios ↗</a>
-        </div>
-        ${!isCancelled && !isFinal ? `<p class="hint">O status da troca é atualizado automaticamente pelos Correios a cada 2 horas.</p>` : ''}
-      ` : ''}
-      <p class="mb-0" style="font-weight:600;">Status atual: ${trade.status}</p>`;
+    // Cada envio vira um bloco: título (só no livro por livro), agência de
+    // retirada, linha de etapas e o botão de avançar/finalizar daquele envio.
+    const envioBlockHTML = (envio) => {
+      const idx = statusIndex(envio.status);
+      const souRemetente = envio.remetenteId === session.id;
+      const envioFinal = envio.status === STATUS_FINAL;
+      const nextStatus = TRADE_STATUS[Math.min(idx + 1, TRADE_STATUS.indexOf(STATUS_CHEGADA))];
+      const podeAvancar = souRemetente && !pendingDecision && !isCancelled && !envioFinal && envio.status !== STATUS_CHEGADA;
+      const podeFinalizar = !souRemetente && envio.status === STATUS_CHEGADA;
+
+      // A etapa atual já conta como cumprida: ao "Marcar como: X", o passo X fica verde.
+      const stepperHTML = isCancelled
+        ? `<p style="color:var(--danger);font-weight:600;">❌ Troca cancelada</p>`
+        : `<div class="status-stepper ${dual ? 'vertical' : ''}">
+            ${TRADE_STATUS.slice(0, 6).map((s, i) => `
+              <div class="status-step ${i <= idx ? 'done' : ''}">
+                <div class="status-dot">${i <= idx ? '✓' : i + 1}</div>
+                <div class="status-label">${s}</div>
+              </div>
+            `).join('')}
+          </div>`;
+
+      // Agência dos Correios onde quem recebe vai retirar: ele escolhe enquanto
+      // não houver uma (até o livro chegar) e só pode trocar antes da postagem;
+      // os dois lados veem a escolha.
+      const agencia = envio.agenciaRetirada;
+      const podeEscolherAgencia = !souRemetente && !isCancelled && (agencia ? idx < TRADE_STATUS.indexOf('Postada') : idx < TRADE_STATUS.indexOf(STATUS_CHEGADA));
+      // Sem agência escolhida não dá para postar (a etiqueta precisa dela).
+      const precisaAgencia = envio.status === 'Aceita' && !agencia;
+      let agenciaHTML = '';
+      if (agencia) {
+        agenciaHTML = `
+          <div class="trade-agencia">
+            <div class="trade-agencia-info">
+              <strong>📍 Retirada nos Correios</strong>
+              <p class="mb-0">${agenciaResumo(agencia)}</p>
+              ${agencia.cep ? `<p class="mb-0 text-muted">CEP ${agencia.cep}</p>` : ''}
+              ${agencia.telefone ? `<p class="mb-0 text-muted">Destinatário: ${agencia.destinatario || envio.destinatarioNome || 'Destinatário'} · ${agencia.telefone}</p>` : ''}
+              ${agencia.horario ? `<p class="mb-0 text-muted">Horário: ${agencia.horario}</p>` : ''}
+              ${agenciaMapUrl(agencia) ? `<a href="${agenciaMapUrl(agencia)}" target="_blank" rel="noopener" class="agencia-map-link">Ver no mapa ↗</a>` : ''}
+            </div>
+            ${podeEscolherAgencia ? `<button class="btn btn-ghost btn-sm" data-action="agencia" data-envio="${envio.key}">Trocar agência</button>` : ''}
+          </div>`;
+      } else if (podeEscolherAgencia) {
+        agenciaHTML = `
+          <div class="trade-agencia ${envio.status === 'Aceita' ? 'trade-agencia-pending' : ''}">
+            <div class="trade-agencia-info">
+              <strong>📍 Onde você vai retirar o livro?</strong>
+              <p class="mb-0 text-muted">O local escolhido será o local de retirada do livro.</p>
+            </div>
+            <button class="btn ${envio.status === 'Aceita' ? 'btn-primary' : 'btn-secondary'} btn-sm" data-action="agencia" data-envio="${envio.key}">Escolher agência</button>
+          </div>`;
+      } else if (souRemetente && envio.status === 'Aceita') {
+        agenciaHTML = `<p class="trade-agencia-waiting mb-0">📍 Aguardando ${dual ? envio.destinatarioNome || 'a outra parte' : 'o solicitante'} escolher a agência dos Correios para retirada.</p>`;
+      }
+
+      const actionsHTML = podeAvancar || podeFinalizar ? `
+        <div class="trade-envio-actions">
+          ${podeAvancar ? `<button class="btn btn-primary btn-sm" data-action="avancar" data-envio="${envio.key}" ${precisaAgencia ? 'disabled title="Aguarde a escolha da agência de retirada para postar."' : ''}>Marcar como: ${nextStatus}</button>` : ''}
+          ${podeFinalizar ? `<button class="btn btn-highlight btn-sm" data-action="finalizar" data-envio="${envio.key}">✅ Finalizar troca</button>` : ''}
+        </div>` : '';
+
+      // Livro por livro: uma coluna por livro, com dados do livro, de entrega e status.
+      if (dual) {
+        return `
+          <div class="trade-dual-col" data-envio-block="${envio.key}">
+            <p class="trade-envio-title mb-0">${souRemetente ? 'Você envia' : 'Você recebe'}</p>
+            <div class="trade-dual-box">${envio.key === 'dono' ? mainBookHTML : offeredBooksFallbackHTML}</div>
+            <div class="trade-dual-box trade-dual-entrega">
+              <p class="trade-dual-box-title">📍 Dados de entrega</p>
+              ${agenciaHTML || `<p class="mb-0 text-muted">Agência de retirada não informada.</p>`}
+            </div>
+            <div class="trade-dual-box">
+              <p class="trade-dual-box-title">Status</p>
+              ${stepperHTML}
+              ${actionsHTML}
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="trade-envio" data-envio-block="${envio.key}">
+          ${agenciaHTML}
+          ${stepperHTML}
+          ${actionsHTML}
+        </div>`;
+    };
+
+    // Painel de rastreio: quem envia informa o código; quem recebe acompanha.
+    const trackingBlockHTML = (envio) => {
+      const souRemetente = envio.remetenteId === session.id;
+      const envioFinal = envio.status === STATUS_FINAL;
+      const rastreio = envio.rastreio || {};
+      const codigoValido = isValidTrackingCode(rastreio.codigo);
+      return `
+        <div class="tracking-envio ${dual ? 'trade-dual-box' : ''}" data-envio-block="${envio.key}">
+          ${dual ? `<p class="trade-envio-title mb-0">${souRemetente ? 'Você envia' : 'Você recebe'}: <strong>${envio.titulo}</strong></p>` : ''}
+          ${souRemetente && !isCancelled && !envioFinal ? `
+            <p class="mb-0"><strong>Transportadora:</strong> Correios</p>
+            <div class="field" style="margin-top:10px;">
+              <label>Código de rastreio dos Correios</label>
+              <input class="input" type="text" placeholder="Ex: AA123456789BR" value="${rastreio.codigo || ''}" maxlength="13" data-tracking-code data-envio="${envio.key}">
+            </div>
+          ` : `
+            <p class="mb-0"><strong>Transportadora:</strong> Correios</p>
+            <p class="mb-0"><strong>Código de rastreio:</strong> ${rastreio.codigo || `ainda não informado por ${dual ? envio.remetenteNome || 'quem envia' : 'quem envia'}`}</p>
+          `}
+          ${codigoValido ? `
+            <div class="tracking-actions">
+              <a class="btn btn-ghost btn-sm" href="${trackingUrl(rastreio.codigo)}" target="_blank" rel="noopener">Ver no site dos Correios ↗</a>
+            </div>
+          ` : ''}
+        </div>`;
+    };
+
+    // Cada um avalia depois de retirar o próprio livro (por pontos: os dois, ao final).
+    const meuRecebimento = envios.find(e => e.destinatarioId === session.id);
+    const podeAvaliar = isFinal || (dual && meuRecebimento?.status === STATUS_FINAL);
+    const algumFinalizado = envios.some(e => e.status === STATUS_FINAL);
 
     const mainBookHTML = `
       <div class="trade-book-item">
@@ -231,6 +276,9 @@ async function renderTrades() {
       ? [mainBookHTML, offeredBooksHTML]
       : [offeredBooksHTML, mainBookHTML];
     const booksRowHTML = booksInOrder.filter(Boolean).join('<span class="trade-swap-icon">⇄</span>');
+    // Livro oferecido já removido do catálogo: mostra ao menos o título guardado na troca.
+    const offeredBooksFallbackHTML = offeredBooksHTML || (trade.livrosOferecidosTitulos || []).map(titulo => `
+      <div class="trade-book-item"><div><strong>${titulo}</strong><p class="mb-0 trade-book-owner">${trade.requesterNome || 'Leitor(a)'}</p></div></div>`).join('');
 
     const bookDetailHTML = (book, titulo, info) => `
       <div class="detail-book">
@@ -263,31 +311,29 @@ async function renderTrades() {
           <h4 class="trade-card-title">${trade.tipo === 'pontos' ? 'Troca por pontos' : 'Proposta'}</h4>
           <button class="btn-icon trade-info-btn" data-action="info" title="Como funciona a retirada nos Correios" aria-label="Como funciona a retirada nos Correios">i</button>
         </div>
+        ${dual ? '' : `
         <div class="trade-card-head">
           <div class="trade-books-row">
             ${booksRowHTML}
           </div>
-        </div>
+        </div>`}
+        ${dual && showDeadline ? `<div class="trade-card-meta"><p class="deadline-warning mb-0">⏳ Prazo de postagem: ${dl > 0 ? `${dl} dia(s) restante(s)` : 'expirado'}</p></div>` : ''}
+        ${dual ? `<div class="trade-dual">${envios.map(envioBlockHTML).join('')}</div>` : ''}
         <button class="btn btn-ghost btn-sm trade-vermais-btn" data-action="vermais">Ver mais ▾</button>
         <div class="details-panel" data-panel="detalhes">
           ${detailsHTML}
         </div>
-        ${showDeadline ? `<div class="trade-card-meta"><p class="deadline-warning mb-0">⏳ Prazo de postagem: ${dl > 0 ? `${dl} dia(s) restante(s)` : 'expirado'}</p></div>` : ''}
-        ${agenciaHTML}
+        ${!dual && showDeadline ? `<div class="trade-card-meta"><p class="deadline-warning mb-0">⏳ Prazo de postagem: ${dl > 0 ? `${dl} dia(s) restante(s)` : 'expirado'}</p></div>` : ''}
 
-        ${stepperHTML}
+        ${dual ? '' : isCancelled ? `<p style="color:var(--danger);font-weight:600;">❌ Troca cancelada</p>` : envios.map(envioBlockHTML).join('')}
 
         <div class="trade-card-actions">
           ${pendingDecision ? `
             <button class="btn btn-primary btn-sm" data-action="aceitar">✓ Aceitar</button>
             <button class="btn btn-secondary btn-sm" data-action="recusar">✕ Recusar</button>
           ` : ''}
-          ${!pendingDecision && !isCancelled && !isFinal ? `
-            ${souDono && trade.status !== STATUS_CHEGADA ? `<button class="btn btn-primary btn-sm" data-action="avancar">Marcar como: ${nextStatus}</button>` : ''}
-            <button class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar troca</button>
-          ` : ''}
-          ${podeFinalizar ? `<button class="btn btn-highlight btn-sm" data-action="finalizar">✅ Finalizar troca</button>` : ''}
-          ${isFinal ? `<button class="btn btn-highlight btn-sm" data-action="avaliar">⭐ Avaliar troca</button>` : ''}
+          ${!pendingDecision && !isCancelled && !isFinal && !algumFinalizado ? `<button class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar troca</button>` : ''}
+          ${podeAvaliar ? `<button class="btn btn-highlight btn-sm" data-action="avaliar">⭐ Avaliar troca</button>` : ''}
           <button class="btn btn-ghost btn-sm" data-action="chat">💬 Chat</button>
           ${!isCancelled ? `<button class="btn btn-ghost btn-sm" data-action="rastreio">📦 Rastreamento</button>` : ''}
         </div>
@@ -302,7 +348,7 @@ async function renderTrades() {
         </div>
 
         <div class="tracking-panel" data-panel="tracking">
-          ${trackingHTML}
+          ${dual ? `<div class="trade-dual trade-dual-tracking">${envios.map(trackingBlockHTML).join('')}</div>` : envios.map(trackingBlockHTML).join('')}
         </div>
       </div>
     `;
@@ -315,6 +361,7 @@ function bindTradeCardEvents(trades) {
   document.querySelectorAll('.trade-card').forEach(card => {
     const tradeId = card.dataset.tradeId;
     const trade = trades.find(t => t.id === tradeId);
+    const envioDe = (el) => getEnvios(trade).find(e => e.key === el.dataset.envio);
 
     card.querySelector('[data-action="aceitar"]')?.addEventListener('click', async () => {
       const prazoPostagem = new Date();
@@ -329,32 +376,33 @@ function bindTradeCardEvents(trades) {
       showToast('Proposta recusada', '', 'info');
       await renderTrades(); await renderOverview();
     });
-    card.querySelector('[data-action="avancar"]')?.addEventListener('click', async () => {
-      await advanceTradeStatus(tradeId);
+    card.querySelectorAll('[data-action="avancar"]').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      await advanceTradeStatus(tradeId, btn.dataset.envio);
       await renderTrades(); await renderOverview();
-    });
+    }));
     card.querySelector('[data-action="cancelar"]')?.addEventListener('click', () => {
       openCancelConfirmModal(tradeId);
     });
-    // Só o solicitante finaliza (confirma que retirou o livro) e já avalia em seguida.
-    card.querySelector('[data-action="finalizar"]')?.addEventListener('click', async (e) => {
-      e.target.disabled = true;
+    // Só quem recebe finaliza (confirma que retirou o livro) e já avalia em seguida.
+    card.querySelectorAll('[data-action="finalizar"]').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true;
       try {
-        const updated = await finalizeTrade(tradeId);
-        showToast('Troca finalizada!', 'Agora conte como foi a experiência.', 'success');
+        const updated = await finalizeTrade(tradeId, btn.dataset.envio);
+        showToast('Livro retirado!', 'Agora conte como foi a experiência.', 'success');
         await renderTrades(); await renderOverview();
-        openRatingModal(updated || { ...trade, status: STATUS_FINAL });
+        openRatingModal(updated || trade);
       } catch (err) {
         showToast('Não foi possível finalizar', err.message || '', 'error');
-        e.target.disabled = false;
+        btn.disabled = false;
       }
-    });
+    }));
     card.querySelector('[data-action="avaliar"]')?.addEventListener('click', () => {
       openRatingModal(trade);
     });
-    card.querySelector('[data-action="agencia"]')?.addEventListener('click', () => {
-      openAgencyModal(trade);
-    });
+    card.querySelectorAll('[data-action="agencia"]').forEach(btn => btn.addEventListener('click', () => {
+      openAgencyModal(trade, envioDe(btn));
+    }));
     card.querySelector('[data-action="info"]')?.addEventListener('click', openCliqueRetireModal);
 
     const vermaisBtn = card.querySelector('[data-action="vermais"]');
@@ -394,42 +442,39 @@ function bindTradeCardEvents(trades) {
     card.querySelector('[data-send-chat]')?.addEventListener('click', () => submitChatMessage(trade, card));
     card.querySelector('[data-chat-input]')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitChatMessage(trade, card); });
 
-    card.querySelector('[data-save-tracking]')?.addEventListener('click', async (e) => {
-      const codigo = normalizeTrackingCode(card.querySelector('[data-tracking-code]').value);
-      if (!isValidTrackingCode(codigo)) {
-        showToast('Código inválido', 'Códigos dos Correios têm o formato AA123456789BR.', 'error');
-        return;
-      }
-      e.target.disabled = true;
-      try {
-        const updated = await saveTradeTracking(trade, { codigo, transportadora: 'Correios' });
-        showToast('Rastreamento salvo!', updated.status !== trade.status ? `A troca agora está: ${updated.status}` : '', 'success');
-        await renderTrades(); await renderOverview();
-      } catch (err) {
-        showToast('Não foi possível salvar', err.message || '', 'error');
-        e.target.disabled = false;
-      }
-    });
-
-    card.querySelector('[data-refresh-tracking]')?.addEventListener('click', async (e) => {
-      e.target.disabled = true;
-      e.target.textContent = 'Consultando...';
-      try {
-        const result = await refreshTradeTracking(tradeId);
-        const mudouStatus = result?.status && result.status !== trade.status;
-        showToast(
-          mudouStatus ? `Troca agora está: ${result.status}` : 'Rastreio atualizado',
-          result?.ultimoEvento?.descricao || '', 'success',
-        );
-        await renderTrades(); await renderOverview();
-      } catch (err) {
-        showToast('Não foi possível consultar', err.message || 'Tente de novo em instantes.', 'error');
-        e.target.disabled = false;
-        e.target.textContent = '🔄 Atualizar agora';
-      }
+    // O código é salvo sozinho assim que fica completo (AA123456789BR); se a
+    // pessoa sair do campo com um código incompleto, avisa.
+    card.querySelectorAll('[data-tracking-code]').forEach(input => {
+      const envio = envioDe(input);
+      let salvando = false;
+      const salvar = async () => {
+        const codigo = normalizeTrackingCode(input.value);
+        if (salvando || !isValidTrackingCode(codigo) || codigo === (envio.rastreio?.codigo || '')) return;
+        salvando = true;
+        input.disabled = true;
+        try {
+          const updated = await saveTradeTracking(trade, { codigo, transportadora: 'Correios' }, envio.key);
+          const novoStatus = getEnvios(updated).find(e => e.key === envio.key)?.status;
+          showToast('Código de rastreio salvo!', novoStatus && novoStatus !== envio.status ? `O envio agora está: ${novoStatus}` : '', 'success');
+          await renderTrades(); await renderOverview();
+        } catch (err) {
+          showToast('Não foi possível salvar', err.message || '', 'error');
+          input.disabled = false;
+          salvando = false;
+        }
+      };
+      input.addEventListener('input', () => {
+        input.value = normalizeTrackingCode(input.value);
+        salvar();
+      });
+      input.addEventListener('blur', () => {
+        const codigo = normalizeTrackingCode(input.value);
+        if (codigo && !isValidTrackingCode(codigo)) showToast('Código incompleto', 'Códigos dos Correios têm o formato AA123456789BR.', 'error');
+      });
     });
   });
 }
+
 
 // Guia "Clique e Retire" dos Correios (mesmo conteúdo da página oficial), aberto
 // pelo "i" no canto do card da troca.
@@ -485,17 +530,17 @@ function openCliqueRetireModal() {
   `, { labelledBy: 'cliqueRetireTitle' });
 }
 
-// Escolha da agência dos Correios onde o solicitante vai retirar o livro: ele
-// consulta o buscador oficial (Clique e Retire) e informa os dados aqui, podendo
-// salvar a agência para reaproveitar nas próximas trocas.
-function openAgencyModal(trade) {
-  const atual = trade.agenciaRetirada || {};
+// Escolha da agência dos Correios onde quem recebe vai retirar o livro (um envio
+// por vez): ele consulta o buscador oficial (Clique e Retire) e informa os dados
+// aqui, podendo salvar a agência para reaproveitar nas próximas trocas.
+function openAgencyModal(trade, envio) {
+  const atual = envio.agenciaRetirada || {};
   openModal(`
     <div class="modal-header">
       <h3 id="agenciaTitle">📍 Onde você quer retirar o livro?</h3>
       <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
     </div>
-    <p class="text-muted">Consulte a agência no <a href="${CORREIOS_BUSCA_AGENCIAS_URL}" target="_blank" rel="noopener">buscador dos Correios ↗</a> e copie os dados aqui. O anunciante vai postar o livro para essa agência.</p>
+    <p class="text-muted">Consulte a agência no <a href="${CORREIOS_BUSCA_AGENCIAS_URL}" target="_blank" rel="noopener">buscador dos Correios ↗</a> e copie os dados aqui. Quem envia vai postar o livro para essa agência.</p>
     <form id="agenciaForm" class="agencia-manual">
       <div class="field"><label for="agenciaNome">Nome da agência</label><input class="input" id="agenciaNome" placeholder="Ex: AC Itaquera" value="${atual.nome || ''}" required></div>
       <div class="field"><label for="agenciaEndereco">Endereço</label><input class="input" id="agenciaEndereco" placeholder="Rua, número" value="${atual.endereco || ''}" required></div>
@@ -525,18 +570,8 @@ function openAgencyModal(trade) {
     populateEstados(estadoSelect);
     estadoSelect.value = atual.estado || '';
 
-    $('#agenciaCep').addEventListener('input', (e) => {
-      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
-      e.target.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
-    });
-    // (11) 99999-9999 ou (11) 9999-9999
-    $('#agenciaTelefone').addEventListener('input', (e) => {
-      const d = e.target.value.replace(/\D/g, '').slice(0, 11);
-      let v = d;
-      if (d.length > 2) v = `(${d.slice(0, 2)}) ${d.slice(2)}`;
-      if (d.length > 6) v = `(${d.slice(0, 2)}) ${d.length > 10 ? `${d.slice(2, 7)}-${d.slice(7)}` : `${d.slice(2, 6)}-${d.slice(6)}`}`;
-      e.target.value = v;
-    });
+    $('#agenciaCep').addEventListener('input', (e) => { e.target.value = maskCep(e.target.value); });
+    $('#agenciaTelefone').addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
 
     // Primeira escolha nesta troca: usa a agência salva pelo usuário, se houver;
     // senão adianta o que dá (nome e cidade/estado do perfil).
@@ -570,28 +605,28 @@ function openAgencyModal(trade) {
         destinatario: $('#agenciaDestinatario').value.trim(),
         telefone: $('#agenciaTelefone').value.trim(),
       };
-      if (agencia.destinatario.split(/\s+/).length < 2) {
+      if (!isNomeCompleto(agencia.destinatario)) {
         showToast('Nome incompleto', 'Informe nome e sobrenome do destinatário.', 'error');
         $('#agenciaDestinatario').focus();
         return;
       }
-      if (agencia.cep && agencia.cep.replace(/\D/g, '').length !== 8) {
+      if (agencia.cep && !isValidCep(agencia.cep)) {
         showToast('CEP inválido', 'Informe os 8 dígitos do CEP da agência.', 'error');
         $('#agenciaCep').focus();
         return;
       }
-      if (agencia.telefone.replace(/\D/g, '').length < 10) {
+      if (!isValidTelefone(agencia.telefone)) {
         showToast('Telefone inválido', 'Informe o DDD e o número do destinatário.', 'error');
         $('#agenciaTelefone').focus();
         return;
       }
       submitBtn.disabled = true;
       try {
-        await setTradeAgencia(trade, agencia);
+        await setTradeAgencia(trade, agencia, envio.key);
         // Salvar a preferência não pode impedir a troca de seguir — falha em silêncio.
         if (salvarCheckbox.checked) await saveAgencia(agencia).catch(() => {});
         close();
-        showToast('Agência escolhida!', 'O anunciante já consegue ver onde postar o livro.', 'success');
+        showToast('Agência escolhida!', 'Quem envia já consegue ver onde postar o livro.', 'success');
         await renderTrades();
       } catch (err) {
         showToast('Não foi possível salvar', err.message || '', 'error');

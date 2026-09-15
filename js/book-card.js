@@ -27,7 +27,7 @@ export function bookCardHTML(book, owner) {
           ${bookGeneros(book).map(g => `<span class="badge badge-brown">${g}</span>`).join('')}
           <span class="badge badge-terracotta">${book.nacionalidade}</span>
         </div>
-        <p class="book-interest">${PIN_ICON} ${owner.cidade || '—'} · ${book.interessados} interessados</p>
+        <p class="book-interest">${PIN_ICON} ${owner.cidade || '—'}</p>
         <div class="book-owner-row">
           <img src="${owner.foto}" alt="" loading="lazy">
           <span>${owner.nome}</span>

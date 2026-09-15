@@ -72,7 +72,6 @@ if (!book) {
           ${book.ano ? `<li>• Ano: ${book.ano}</li>` : ''}
           ${book.paginas ? `<li>• Páginas: ${book.paginas}</li>` : ''}
           ${book.semDanificacoes ? `<li>• Sem danificações relevantes</li>` : (book.observacoes ? `<li>• Observações: ${book.observacoes}</li>` : '')}
-          <li>• ${book.interessados} pessoas interessadas</li>
         </ul>
 
         <a href="perfil.html" class="card owner-card" style="text-decoration:none;">

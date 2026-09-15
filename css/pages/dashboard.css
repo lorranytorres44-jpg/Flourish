@@ -142,3 +142,40 @@
 .clique-retire-etiqueta-cep { display: inline-block; margin-top: 4px; }
 .agencia-salvar { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .agencia-salva-aviso { font-size: 0.82rem; margin-top: 6px; }
+
+/* Troca livro por livro: um bloco por envio (agência + etapas + ação), separados por linha */
+.trade-envio + .trade-envio { margin-top: 12px; padding-top: 18px; border-top: 1px dashed var(--border); }
+.trade-envio-title { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+.trade-envio-title strong { color: var(--text); }
+.trade-envio-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 16px; }
+.tracking-envio + .tracking-envio { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); }
+
+/* Troca livro por livro: uma coluna por livro (dados do livro / entrega / status) */
+/* As duas colunas dividem as mesmas linhas (título, livro, entrega, status), então
+   as caixas ficam alinhadas lado a lado mesmo com conteúdos de alturas diferentes. */
+.trade-dual {
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr;
+  grid-auto-flow: column; column-gap: 18px; row-gap: 12px; margin: 4px 0 14px;
+}
+.trade-dual-col { display: contents; }
+.trade-dual-col .trade-envio-title { margin-bottom: 0; min-width: 0; }
+.trade-dual-box {
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-alt);
+  padding: 14px 16px; min-width: 0;
+}
+.trade-dual-box-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px; }
+.trade-dual-box .trade-book-item { align-items: flex-start; }
+.trade-dual-box .trade-book-item + .trade-book-item { margin-top: 10px; }
+.trade-dual-entrega .trade-agencia { margin: 0; padding: 0; background: none; border: none; }
+.trade-dual-entrega .trade-agencia-info > strong { display: none; }
+.trade-dual-entrega .trade-agencia-waiting { margin: 0; }
+.trade-dual-box .trade-envio-actions { margin: 4px 0 0; }
+@media (max-width: 760px) {
+  .trade-dual { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
+}
+
+/* Rastreio da troca livro por livro: uma caixa por coluna, na mesma ordem dos livros */
+.trade-dual-tracking { grid-template-rows: none; grid-auto-flow: row; margin: 0; }
+.trade-dual-tracking .tracking-envio + .tracking-envio { margin-top: 0; padding-top: 14px; border-top: none; }
+.trade-dual-tracking .trade-envio-title { margin-bottom: 10px; }
+.trade-dual-tracking .tracking-envio .input { max-width: 100%; }

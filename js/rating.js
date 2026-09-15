@@ -26,7 +26,8 @@ function starsFieldHTML(criterio) {
 
 export function openRatingModal(trade) {
   const session = getSession();
-  const souRemetente = trade.ownerId === session?.id;
+  // Livro por livro: os dois recebem um livro, então os dois avaliam como recebedor.
+  const souRemetente = trade.tipo !== 'proposta' && trade.ownerId === session?.id;
   const criterios = souRemetente ? CRITERIOS_REMETENTE : CRITERIOS_RECEBEDOR;
   const avaliadoId = otherPartyId(trade);
 
