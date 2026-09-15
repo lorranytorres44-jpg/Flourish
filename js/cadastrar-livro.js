@@ -15,7 +15,6 @@ renderFooter();
 
 if (!isLoggedIn()) {
   requireLoginModal('Faça login para anunciar um livro.');
-  return;
 }
 
 // Popular selects

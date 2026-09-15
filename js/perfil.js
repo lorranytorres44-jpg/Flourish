@@ -21,7 +21,6 @@ renderFooter();
 
 if (!isLoggedIn()) {
   requireLoginModal('Faça login para ver seu perfil.');
-  return;
 }
 
 let session = getSession() || {};
@@ -197,9 +196,10 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
       close();
       showToast('Perfil atualizado!', '', 'success');
       renderHeader();
-      renderGenreList();
     });
-  }});
+  }
+});
+});
 // Exclusão de conta
 document.getElementById('deleteAccountBtn')?.addEventListener('click', () => {
   openModal(`
