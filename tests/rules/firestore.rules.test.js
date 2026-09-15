@@ -57,8 +57,9 @@ describe('perfis (users)', () => {
     await assertSucceeds(updateDoc(doc(dbAs(ARTHUR), 'users', ARTHUR), { bio: 'Leitor' }));
     await assertFails(updateDoc(doc(dbAs(LORRANY), 'users', ARTHUR), { bio: 'hack' }));
   });
-  it('ninguém apaga perfil', async () => {
-    await assertFails(deleteDoc(doc(dbAs(ARTHUR), 'users', ARTHUR)));
+  it('o próprio usuário pode apagar o perfil, outros não', async () => {
+    await assertFails(deleteDoc(doc(dbAs(LORRANY), 'users', ARTHUR)));
+    await assertSucceeds(deleteDoc(doc(dbAs(ARTHUR), 'users', ARTHUR)));
   });
 });
 

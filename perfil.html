@@ -24,7 +24,10 @@
       <div style="flex:1;min-width:240px;">
         <div class="profile-name-row">
           <h1 class="mb-0" id="pNome">—</h1>
-          <button class="btn btn-secondary btn-sm" id="editProfileBtn">✏️ Editar perfil</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" id="editProfileBtn">✏️ Editar perfil</button>
+            <button class="btn btn-secondary btn-sm" id="deleteAccountBtn" style="color:var(--danger);border-color:var(--danger);">🗑️ Excluir conta</button>
+          </div>
         </div>
         <p class="mb-0" id="pLocal">—</p>
         <p id="pBio" style="max-width:560px;"></p>

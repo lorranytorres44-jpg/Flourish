@@ -3,11 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Perfis: leitura pública (precisamos mostrar nome/foto/cidade de quem
-    // anuncia livros), mas só o próprio usuário edita seus dados.
+    // anuncia livros), mas só o próprio usuário edita ou exclui seus dados.
     match /users/{userId} {
       allow read: if true;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if false;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
 
       match /favorites/{bookId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;

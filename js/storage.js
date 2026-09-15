@@ -8,7 +8,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   onAuthStateChanged, updateProfile, sendPasswordResetEmail, sendEmailVerification,
-  verifyPasswordResetCode, confirmPasswordReset,
+  verifyPasswordResetCode, confirmPasswordReset, deleteUser,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc,
@@ -30,10 +30,10 @@ export const authReady = new Promise(resolve => { resolveAuthReady = resolve; })
 let authReadyResolved = false;
 
 function unsubscribeAll() {
-  favoritesUnsub?.(); readListUnsub?.(); notifUnsub?.();
-  favoritesUnsub = readListUnsub = notifUnsub = null;
+  favoritesUnsub?.(); readListUnsub?.(); notifUnsub?.(); userDocUnsub?.();
+  favoritesUnsub = readListUnsub = notifUnsub = userDocUnsub = null;
 }
-let favoritesUnsub = null, readListUnsub = null, notifUnsub = null;
+let favoritesUnsub = null, readListUnsub = null, notifUnsub = null, userDocUnsub = null;
 
 onAuthStateChanged(auth, async (user) => {
   unsubscribeAll();
@@ -56,8 +56,28 @@ onAuthStateChanged(auth, async (user) => {
       snap = await getDoc(ref);
     }
     const data = snap.exists() ? snap.data() : {};
-    cachedSession = { id: user.uid, nome: data.nome || 'Leitor(a)', email: data.email || user.email || '', foto: data.foto || DEFAULT_FOTO, cidade: data.cidade || '', estado: data.estado || '', bio: data.bio || 'Ainda não escrevi minha biografia.', generosFavoritos: data.generosFavoritos || [] };
     cachedPoints = data.pontos ?? 0;
+
+    userDocUnsub = onSnapshot(ref, (docSnap) => {
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        cachedSession = {
+          id: user.uid,
+          nome: d.nome || 'Leitor(a)',
+          email: d.email || user.email || '',
+          foto: d.foto || DEFAULT_FOTO,
+          cidade: d.cidade || '',
+          estado: d.estado || '',
+          bio: d.bio || 'Ainda não escrevi minha biografia.',
+          generosFavoritos: d.generosFavoritos || [],
+        };
+        if (d.pontos !== undefined && d.pontos !== cachedPoints) {
+          cachedPoints = d.pontos;
+          window.dispatchEvent(new CustomEvent('tdl:points-changed', { detail: { pontos: cachedPoints } }));
+        }
+        window.dispatchEvent(new CustomEvent('tdl:auth-changed'));
+      }
+    });
 
     favoritesUnsub = onSnapshot(collection(db, 'users', user.uid, 'favorites'), (qs) => {
       cachedFavorites = new Set(qs.docs.map(d => d.id));
@@ -225,14 +245,30 @@ export async function toggleRead(bookId) {
 // -------- Livros --------
 export async function getFirestoreBooks() {
   const qs = await getDocs(collection(db, 'books'));
-  return qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  return qs.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(b => b.disponivel !== false && b.status !== 'trocado');
 }
 
 export async function getMyBooks() {
   if (!cachedUser) return [];
   const q = query(collection(db, 'books'), where('ownerId', '==', cachedUser.uid));
   const qs = await getDocs(q);
-  return qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  return qs.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(b => b.disponivel !== false && b.status !== 'trocado');
+}
+
+export async function deleteBook(bookId) {
+  if (!cachedUser) throw new Error('Usuário não autenticado.');
+  const book = await getAnyBookById(bookId);
+  if (!book) throw new Error('Livro não encontrado.');
+  if (book.ownerId !== cachedUser.uid) {
+    throw new Error('Você só pode excluir livros anunciados por você.');
+  }
+  await deleteDoc(doc(db, 'books', bookId));
+  window.dispatchEvent(new CustomEvent('tdl:book-deleted', { detail: { bookId } }));
+  return true;
 }
 
 export async function addMyBook(book) {
@@ -285,8 +321,12 @@ export async function getOwnerInfo(ownerId) {
 import {
   TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, ENVIO_KEYS, isDualTrade, envioVazio,
   normalizeTrade, getEnvios, envioTitulo, envioField, aggregateStatus, nextEnvioStatus,
+  canRequestTrade, isTradePosted, canCancelTrade, hasPrazoPostagemExpirado,
 } from './trade-logic.js';
-export { TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, ENVIO_KEYS, isDualTrade, getEnvios, envioTitulo };
+export {
+  TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, ENVIO_KEYS, isDualTrade, getEnvios, envioTitulo,
+  canRequestTrade, isTradePosted, canCancelTrade, hasPrazoPostagemExpirado,
+};
 
 
 // Trocas livro por livro criadas antes de guardarmos os títulos dos livros
@@ -322,8 +362,45 @@ export async function getTrades() {
   return [...map.values()].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 }
 
+// Escuta alterações de trocas em tempo real (evita ter que dar F5)
+export function subscribeTrades(callback) {
+  if (!cachedUser) return () => {};
+  const uid = cachedUser.uid;
+  let tradesRequester = [];
+  let tradesOwner = [];
+
+  const notify = async () => {
+    const map = new Map();
+    tradesRequester.forEach(d => map.set(d.id, d));
+    tradesOwner.forEach(d => map.set(d.id, d));
+    map.forEach(normalizeTrade);
+    await Promise.all([...map.values()].map(ensureOferecidosTitulos));
+    const sorted = [...map.values()].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+    callback(sorted);
+  };
+
+  const unsubReq = onSnapshot(query(collection(db, 'trades'), where('requesterId', '==', uid)), (qs) => {
+    tradesRequester = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+    notify();
+  });
+
+  const unsubOwner = onSnapshot(query(collection(db, 'trades'), where('ownerId', '==', uid)), (qs) => {
+    tradesOwner = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+    notify();
+  });
+
+  return () => {
+    unsubReq();
+    unsubOwner();
+  };
+}
+
 export async function createTradeRequest({ bookId, tipo, pontosUsados, livrosOferecidos, mensagem }) {
   const book = await getAnyBookById(bookId);
+  if (!book) throw new Error('Livro não encontrado');
+  if (cachedUser && book.ownerId === cachedUser.uid) {
+    throw new Error('Você não pode solicitar troca para o seu próprio livro.');
+  }
   const owner = await getOwnerInfo(book?.ownerId);
   const oferecidos = (await Promise.all((livrosOferecidos || []).map(getAnyBookById))).filter(Boolean);
 
@@ -418,13 +495,27 @@ export async function finalizeTrade(tradeId, envioKey = 'dono') {
     'troca',
   );
   await addPoints(PONTOS_REGRAS.CONCLUIR_TROCA, 'troca concluída');
-  const idsToRemove = envioKey === 'dono' ? [trade.bookId] : (trade.livrosOferecidos || []);
-  await Promise.all(idsToRemove.map(id => deleteDoc(doc(db, 'books', id)).catch(() => {})));
+  // Quando uma troca é finalizada, exclui definitivamente os livros envolvidos da biblioteca
+  const idsToRemove = tudoFinalizado
+    ? [trade.bookId, ...(trade.livrosOferecidos || [])]
+    : (envioKey === 'dono' ? [trade.bookId] : (trade.livrosOferecidos || []));
+  await Promise.all(idsToRemove.map(async (id) => {
+    try {
+      await updateDoc(doc(db, 'books', id), { disponivel: false, status: 'trocado' });
+    } catch {}
+    try {
+      await deleteDoc(doc(db, 'books', id));
+    } catch {}
+  }));
+  window.dispatchEvent(new CustomEvent('tdl:book-deleted'));
   return updated;
 }
 
 export async function cancelTrade(tradeId, comJustificativa = true) {
   const trade = await readTrade(tradeId);
+  if (!canCancelTrade(trade)) {
+    throw new Error('Esta troca não pode ser cancelada porque um dos livros já foi postado nos Correios.');
+  }
   const updated = await updateTrade(tradeId, { status: 'Cancelada' });
   if (!comJustificativa) {
     await addPoints(PONTOS_REGRAS.CANCELAR_SEM_JUSTIFICATIVA, 'troca cancelada sem justificativa');
@@ -432,6 +523,26 @@ export async function cancelTrade(tradeId, comJustificativa = true) {
   await addNotification('Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
   if (trade) await addNotificationFor(otherPartyId(trade), 'Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
   return updated;
+}
+
+// -------- Exclusão definitiva de conta --------
+export async function deleteAccount() {
+  if (!cachedUser) throw new Error('Nenhum usuário autenticado');
+  const uid = cachedUser.uid;
+  const myBooks = await getMyBooks();
+  await Promise.all(myBooks.map(b => deleteDoc(doc(db, 'books', b.id)).catch(() => {})));
+  await deleteDoc(doc(db, 'users', uid, 'private', 'agencia')).catch(() => {});
+  await deleteDoc(doc(db, 'users', uid)).catch(() => {});
+  await deleteUser(auth.currentUser);
+  unsubscribeAll();
+  cachedUser = null;
+  cachedSession = null;
+  cachedPoints = null;
+  cachedFavorites = new Set();
+  cachedReadList = new Set();
+  cachedNotifications = [];
+  window.dispatchEvent(new CustomEvent('tdl:auth-changed'));
+  return true;
 }
 
 // -------- Correios: agência de retirada e rastreio --------

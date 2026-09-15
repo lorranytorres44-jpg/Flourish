@@ -1,12 +1,17 @@
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
-import { getPoints, getMyBooks, createTradeRequest, isLoggedIn } from './storage.js';
+import { getPoints, getMyBooks, createTradeRequest, isLoggedIn, getSession } from './storage.js';
 
 const CUSTO_TROCA_PONTOS = 3;
 
 export async function openTradeModal(book) {
   if (!isLoggedIn()) {
     showToast('Entre na sua conta', 'Faça login para solicitar uma troca.', 'info');
+    return;
+  }
+  const session = getSession();
+  if (session && book.ownerId === session.id) {
+    showToast('Ação inválida', 'Você não pode propor troca para um livro anunciado por você mesmo.', 'error');
     return;
   }
   const points = getPoints() ?? 0;

@@ -91,3 +91,34 @@ export function nextEnvioStatus(status) {
   const idx = TRADE_STATUS.indexOf(status);
   return TRADE_STATUS[Math.min(idx + 1, TRADE_STATUS.indexOf(STATUS_CHEGADA))];
 }
+
+// Impede solicitar troca para o próprio livro
+export function canRequestTrade(bookOrOwnerId, requesterId) {
+  if (!bookOrOwnerId || !requesterId) return false;
+  const ownerId = typeof bookOrOwnerId === 'object' ? bookOrOwnerId.ownerId : bookOrOwnerId;
+  return ownerId !== requesterId;
+}
+
+export const POSTED_STATUSES = ['Postada', 'Em rota', 'Chegada na agência', 'Finalizada'];
+
+// Verifica se qualquer livro da troca já foi postado (ou possui código de rastreio)
+export function isTradePosted(trade) {
+  if (!trade) return false;
+  const envios = getEnvios(trade);
+  return envios.some(e => POSTED_STATUSES.includes(e.status) || Boolean(e.rastreio?.codigo));
+}
+
+// Bloqueia o cancelamento se algum livro já foi postado nos Correios
+export function canCancelTrade(trade) {
+  if (!trade) return false;
+  if (trade.status === 'Cancelada' || trade.status === 'Finalizada') return false;
+  if (isTradePosted(trade)) return false;
+  return true;
+}
+
+// Verifica se o prazo de postagem expirou
+export function hasPrazoPostagemExpirado(trade) {
+  if (!trade?.prazoPostagem) return false;
+  return new Date(trade.prazoPostagem) < new Date();
+}
+

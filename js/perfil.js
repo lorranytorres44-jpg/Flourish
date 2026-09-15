@@ -2,6 +2,7 @@ import { GENEROS } from './data.js';
 import {
   getSession, updateSession, isLoggedIn, getPoints, getMyBooks, getTrades,
   getFavorites, getAnyBookById, getRatingsForUser, ratingScore, authReady,
+  deleteBook, deleteAccount,
 } from './storage.js';
 import { renderNavbar, renderFooter, requireLoginModal } from './navbar.js';
 import { renderBookGrid, initRevealAnimations } from './book-card.js';
@@ -59,10 +60,47 @@ if (location.hash) {
   document.getElementById('profileTabs')?.scrollIntoView({ block: 'start' });
 }
 
-const myBooks = await getMyBooks();
-document.getElementById('statAnunciados').textContent = myBooks.length;
+async function refreshMyBooks() {
+  const books = await getMyBooks();
+  document.getElementById('statAnunciados').textContent = books.length;
+  await renderBookGrid(document.getElementById('gridAnunciados'), books, 'Você ainda não anunciou nenhum livro.', {
+    showDelete: true,
+    onDeleteBook: (bookId, bookTitle) => {
+      openModal(`
+        <div class="modal-header">
+          <h3 id="delBookTitle">Excluir livro anunciado</h3>
+          <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
+        </div>
+        <p>Tem certeza que deseja excluir o anúncio de <strong>"${bookTitle || 'este livro'}"</strong>?</p>
+        <p class="text-muted" style="font-size:0.85rem;">Ele será removido imediatamente da biblioteca.</p>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button type="button" class="btn btn-secondary btn-block" data-modal-close>Cancelar</button>
+          <button type="button" class="btn btn-primary btn-block" id="btnConfirmDelBook" style="background:var(--danger);border-color:var(--danger);">Sim, excluir livro</button>
+        </div>
+      `, {
+        labelledBy: 'delBookTitle',
+        onMount: (overlay, close) => {
+          overlay.querySelector('#btnConfirmDelBook').addEventListener('click', async (e) => {
+            e.target.disabled = true;
+            try {
+              await deleteBook(bookId);
+              close();
+              showToast('Livro excluído', 'O anúncio foi removido com sucesso.', 'success');
+              await refreshMyBooks();
+            } catch (err) {
+              showToast('Erro ao excluir', err.message || '', 'error');
+              e.target.disabled = false;
+            }
+          });
+        }
+      });
+    }
+  });
+}
 
-await renderBookGrid(document.getElementById('gridAnunciados'), myBooks, 'Você ainda não anunciou nenhum livro.');
+await refreshMyBooks();
+window.addEventListener('tdl:book-deleted', refreshMyBooks);
+
 const favBooks = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
 await renderBookGrid(document.getElementById('gridFavoritos'), favBooks, 'Você ainda não favoritou nenhum livro.');
 
@@ -161,6 +199,45 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
       renderGenreList();
     });
   }});
+// Exclusão de conta
+document.getElementById('deleteAccountBtn')?.addEventListener('click', () => {
+  openModal(`
+    <div class="modal-header">
+      <h3 id="delAccountTitle" style="color:var(--danger);">Excluir conta</h3>
+      <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
+    </div>
+    <p><strong>Atenção: esta ação é definitiva e irreversível!</strong></p>
+    <p>Ao excluir sua conta, seus dados de perfil, livros anunciados e histórico serão permanentemente removidos.</p>
+    <div class="field" style="margin-top:16px;">
+      <label for="confirmDeleteWord">Para confirmar, digite <strong>EXCLUIR</strong> abaixo:</label>
+      <input class="input" id="confirmDeleteWord" placeholder="EXCLUIR" autocomplete="off">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button type="button" class="btn btn-secondary btn-block" data-modal-close>Cancelar</button>
+      <button type="button" class="btn btn-primary btn-block" id="btnConfirmDelAccount" style="background:var(--danger);border-color:var(--danger);">Excluir definitivamente</button>
+    </div>
+  `, {
+    labelledBy: 'delAccountTitle',
+    onMount: (overlay, close) => {
+      overlay.querySelector('#btnConfirmDelAccount').addEventListener('click', async (e) => {
+        const val = overlay.querySelector('#confirmDeleteWord').value.trim();
+        if (val !== 'EXCLUIR') {
+          showToast('Confirmação incorreta', 'Digite a palavra EXCLUIR para confirmar.', 'error');
+          return;
+        }
+        e.target.disabled = true;
+        try {
+          await deleteAccount();
+          close();
+          showToast('Conta excluída', 'Sua conta e dados foram removidos.', 'info');
+          setTimeout(() => window.location.href = 'index.html', 800);
+        } catch (err) {
+          showToast('Não foi possível excluir', err.message || 'Faça login novamente para validar a exclusão.', 'error');
+          e.target.disabled = false;
+        }
+      });
+    }
+  });
 });
 
 initRevealAnimations();

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA,
   isDualTrade, normalizeTrade, getEnvios, envioTitulo, envioField, aggregateStatus, nextEnvioStatus,
+  canRequestTrade, isTradePosted, canCancelTrade, hasPrazoPostagemExpirado,
 } from '../../js/trade-logic.js';
 
 const base = {
@@ -122,5 +123,55 @@ describe('normalizeTrade (trocas antigas salvas no Firestore)', () => {
     expect(t.envios.dono.status).toBe('Em rota');
     expect(t.envios.solicitante.status).toBe(STATUS_FINAL);
     expect(t.envios.dono.rastreio).toEqual({ codigo: '', transportadora: '' }); // campos faltantes ganham o padrão
+  });
+});
+
+describe('canRequestTrade (não trocar consigo mesmo)', () => {
+  it('impede propor troca para o próprio livro', () => {
+    expect(canRequestTrade({ ownerId: 'user123' }, 'user123')).toBe(false);
+    expect(canRequestTrade('user123', 'user123')).toBe(false);
+  });
+  it('permite propor troca para livros de outros leitores', () => {
+    expect(canRequestTrade({ ownerId: 'arthur' }, 'lorrany')).toBe(true);
+    expect(canRequestTrade('arthur', 'lorrany')).toBe(true);
+  });
+  it('rejeita parâmetros nulos ou inválidos', () => {
+    expect(canRequestTrade(null, 'user123')).toBe(false);
+    expect(canRequestTrade('user123', null)).toBe(false);
+  });
+});
+
+describe('canCancelTrade e bloqueio após postagem', () => {
+  it('permite cancelar troca antes de qualquer postagem', () => {
+    const t = proposta({ status: 'Aceita' });
+    expect(isTradePosted(t)).toBe(false);
+    expect(canCancelTrade(t)).toBe(true);
+  });
+
+  it('bloqueia cancelamento se qualquer um dos envios já foi postado', () => {
+    const t = proposta({ status: 'Aceita' });
+    t.envios.dono.status = 'Postada';
+    expect(isTradePosted(t)).toBe(true);
+    expect(canCancelTrade(t)).toBe(false);
+  });
+
+  it('bloqueia cancelamento se código de rastreio já foi informado', () => {
+    const t = proposta({ status: 'Aceita' });
+    t.envios.solicitante.rastreio.codigo = 'BR123456789JJ';
+    expect(isTradePosted(t)).toBe(true);
+    expect(canCancelTrade(t)).toBe(false);
+  });
+
+  it('bloqueia cancelamento de troca por pontos após postagem', () => {
+    const t = pontos({ status: 'Postada' });
+    expect(isTradePosted(t)).toBe(true);
+    expect(canCancelTrade(t)).toBe(false);
+  });
+
+  it('identifica prazo de postagem expirado', () => {
+    const futuro = new Date(Date.now() + 86400000).toISOString();
+    const passado = new Date(Date.now() - 86400000).toISOString();
+    expect(hasPrazoPostagemExpirado({ prazoPostagem: futuro })).toBe(false);
+    expect(hasPrazoPostagemExpirado({ prazoPostagem: passado })).toBe(true);
   });
 });
