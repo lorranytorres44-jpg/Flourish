@@ -29,6 +29,20 @@
   </aside>
 
   <main class="dash-main">
+    <div id="emailVerificationBanner" style="display:none;background:var(--sage-light);border:1px solid var(--sage);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:1.6rem;">✉️</span>
+        <div>
+          <strong style="color:var(--text);">Confirme seu endereço de e-mail</strong>
+          <p class="text-muted" style="margin:2px 0 0 0;font-size:0.85rem;">Enviamos um link de confirmação para sua caixa de entrada. Verifique para garantir acesso seguro a todas as trocas.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnResendEmailBanner">Reenviar link</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnCheckVerifiedBanner">Já confirmei</button>
+      </div>
+    </div>
+
     <section class="dash-section active" id="section-visao">
       <h1>Olá, <span id="userFirstName">leitor(a)</span></h1>
       <div class="overview-cards">

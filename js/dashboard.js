@@ -4,7 +4,7 @@ import {
   advanceTradeStatus, finalizeTrade, cancelTrade, updateTrade, canCancelTrade, isTradePosted, hasPrazoPostagemExpirado,
   cleanupExpiredMessages, setTradeAgencia, saveTradeTracking, addNotificationFor, getSavedAgencia, saveAgencia,
   sendChatMessage, subscribeChatMessages, getNotifications, getFavorites, getReadList,
-  authReady, getTheme, setTheme,
+  authReady, getTheme, setTheme, checkEmailVerified, resendVerificationEmail, getAuthCurrentUser,
 } from './storage.js';
 import { renderNavbar, renderFooter, requireLoginModal } from './navbar.js';
 import { renderBookGrid, initRevealAnimations } from './book-card.js';
@@ -790,5 +790,34 @@ document.getElementById('logoutBtnDash').addEventListener('click', async () => {
   await logout();
   window.location.href = 'index.html';
 });
+
+// Banner de verificação de e-mail (Etapa 2)
+const emailBanner = document.getElementById('emailVerificationBanner');
+const currentAuthUser = getAuthCurrentUser();
+if (emailBanner && currentAuthUser && !currentAuthUser.emailVerified && currentAuthUser.providerData[0]?.providerId === 'password') {
+  emailBanner.style.display = 'flex';
+
+  document.getElementById('btnCheckVerifiedBanner')?.addEventListener('click', async () => {
+    const verified = await checkEmailVerified();
+    if (verified) {
+      emailBanner.style.display = 'none';
+      showToast('E-mail verificado!', 'Seu e-mail foi confirmado com sucesso.', 'success');
+    } else {
+      showToast('Ainda não confirmado', 'Clique no link de confirmação que enviamos para o seu e-mail antes de validar.', 'warning');
+    }
+  });
+
+  document.getElementById('btnResendEmailBanner')?.addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    try {
+      await resendVerificationEmail();
+      showToast('E-mail reenviado', 'Um novo link de confirmação foi enviado para sua caixa de entrada.', 'success');
+      setTimeout(() => { e.target.disabled = false; }, 15000);
+    } catch (err) {
+      showToast('Erro ao reenviar', err.message || '', 'error');
+      e.target.disabled = false;
+    }
+  });
+}
 
 initRevealAnimations();

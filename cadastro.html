@@ -23,43 +23,105 @@
   <div class="auth-form-side">
     <div class="auth-box">
       <a href="index.html" class="back-home">← Voltar para o início</a>
-      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
-        <h1 style="font-size:1.8rem;margin:0;">Criar sua conta</h1>
-        <p class="text-muted" style="margin:0;">Leva menos de um minuto.</p>
+
+      <!-- Indicador das duas etapas de cadastro -->
+      <div class="stepper" style="display:flex;align-items:center;gap:10px;margin-bottom:22px;font-size:0.85rem;" aria-label="Etapas de cadastro">
+        <div id="step1Indicator" style="display:flex;align-items:center;gap:6px;font-weight:600;color:var(--primary);">
+          <span id="step1Badge" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:0.75rem;">1</span>
+          <span>Dados</span>
+        </div>
+        <div id="stepperLine" style="flex:1;height:2px;background:var(--border);transition:background 0.3s;"></div>
+        <div id="step2Indicator" style="display:flex;align-items:center;gap:6px;font-weight:500;color:var(--text-muted);">
+          <span id="step2Badge" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--text-muted);font-size:0.75rem;">2</span>
+          <span>Verificação</span>
+        </div>
       </div>
 
-      <button type="button" class="btn-google" id="googleSignupBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4.2h6.5c-.1 1-.9 2.7-2.6 3.8l4 3.1c2.4-2.2 3.6-5.4 3.6-8.9z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.8l-4-3.1c-1.1.7-2.4 1.1-3.9 1.1-3 0-5.6-2-6.5-4.8l-4.1 3.2C3.5 21.5 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.5 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.6.4-2.4L1.4 6.4C.5 8.1 0 10 0 12s.5 3.9 1.4 5.6l4.1-3.2z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.9 1.2 15.2 0 12 0 7.4 0 3.5 2.5 1.4 6.4l4.1 3.2c.9-2.8 3.5-4.8 6.5-4.8z"/></svg>
-        Cadastrar com Google
-      </button>
-      <div class="auth-divider">ou cadastre-se com e-mail</div>
+      <!-- ETAPA 1: Formulário de cadastro -->
+      <div id="step1Panel">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+          <h1 style="font-size:1.8rem;margin:0;">Criar sua conta</h1>
+          <p class="text-muted" style="margin:0;">Etapa 1 de 2</p>
+        </div>
 
-      <form id="cadastroForm" novalidate>
-        <div class="field">
-          <label for="nome">Nome completo</label>
-          <input class="input" type="text" id="nome" required placeholder="Seu nome">
+        <button type="button" class="btn-google" id="googleSignupBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4.2h6.5c-.1 1-.9 2.7-2.6 3.8l4 3.1c2.4-2.2 3.6-5.4 3.6-8.9z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.8l-4-3.1c-1.1.7-2.4 1.1-3.9 1.1-3 0-5.6-2-6.5-4.8l-4.1 3.2C3.5 21.5 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.5 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.6.4-2.4L1.4 6.4C.5 8.1 0 10 0 12s.5 3.9 1.4 5.6l4.1-3.2z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.9 1.2 15.2 0 12 0 7.4 0 3.5 2.5 1.4 6.4l4.1 3.2c.9-2.8 3.5-4.8 6.5-4.8z"/></svg>
+          Cadastrar com Google
+        </button>
+        <div class="auth-divider">ou cadastre-se com e-mail</div>
+
+        <form id="cadastroForm" novalidate>
+          <div class="field">
+            <label for="nome">Nome completo</label>
+            <input class="input" type="text" id="nome" required placeholder="Seu nome completo">
+          </div>
+          <div class="field">
+            <label for="cadEmail">E-mail (Gmail ou outro provedor)</label>
+            <input class="input" type="email" id="cadEmail" required placeholder="ex: seuemail@gmail.com">
+            <p class="hint" id="emailSuggestionHint" style="display:none;color:var(--primary);margin-top:6px;font-size:0.85rem;cursor:pointer;">
+              💡 Você quis dizer <strong id="suggestedEmailText"></strong>? <span style="text-decoration:underline;">Clique para corrigir</span>.
+            </p>
+          </div>
+          <div class="field">
+            <label for="cadSenha">Senha</label>
+            <input class="input" type="password" id="cadSenha" required minlength="6" placeholder="Mínimo 6 caracteres">
+            <div class="password-strength"><span id="strengthBar"></span></div>
+          </div>
+          <div class="field">
+            <label for="cadConfirmarSenha">Confirmar senha</label>
+            <input class="input" type="password" id="cadConfirmarSenha" required minlength="6" placeholder="Repita a senha">
+            <p class="hint" id="confirmarSenhaHint" style="display:none;color:var(--danger);">As senhas não coincidem.</p>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.85rem;color:var(--text-muted);font-weight:400;margin-bottom:18px;">
+            <input type="checkbox" id="aceiteTermos" required style="margin-top:3px;">
+            <span>Concordo com os <a href="termos.html#termos-de-uso">Termos de Uso</a> e a <a href="termos.html#politica-de-privacidade">Política de Privacidade</a>.</span>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnSubmitStep1">Avançar para verificação →</button>
+        </form>
+        <p class="auth-foot-link">Já tem conta? <a href="login.html"><strong>Entrar</strong></a></p>
+      </div>
+
+      <!-- ETAPA 2: Verificação do E-mail / Gmail -->
+      <div id="step2Panel" style="display:none;">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--sage-light);display:inline-flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:12px;">
+            ✉️
+          </div>
+          <h1 style="font-size:1.6rem;margin:0 0 8px 0;">Verifique seu e-mail</h1>
+          <p class="text-muted" style="margin:0 0 10px 0;font-size:0.95rem;">
+            Enviamos um link de confirmação para:<br>
+            <strong id="displayTargetEmail" style="color:var(--text);word-break:break-all;">seuemail@gmail.com</strong>
+          </p>
+          <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;font-size:0.85rem;color:var(--text-muted);text-align:left;line-height:1.45;">
+            <strong>Por que verificamos?</strong><br>
+            Confirmamos se o endereço informado realmente existe e é acessível por você antes de você poder trocar livros com segurança na comunidade.
+          </div>
         </div>
-        <div class="field">
-          <label for="cadEmail">E-mail</label>
-          <input class="input" type="email" id="cadEmail" required placeholder="voce@email.com">
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block" id="btnOpenGmail" style="display:none;align-items:center;justify-content:center;gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.272H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.545l8.073-6.052C21.69 2.279 24 3.434 24 5.457z"/></svg>
+            Abrir caixa de entrada do Gmail
+          </a>
+
+          <button type="button" class="btn btn-primary btn-block btn-lg" id="btnCheckVerified">
+            ✓ Já cliquei no link / Confirmar
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-block" id="btnResendEmail">
+            🔄 Reenviar e-mail de verificação
+          </button>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:0.85rem;">
+            <button type="button" id="btnBackToEdit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;text-decoration:underline;">
+              ← Corrigir e-mail
+            </button>
+            <a href="dashboard.html" class="text-muted" style="text-decoration:underline;">
+              Entrar agora e validar depois →
+            </a>
+          </div>
         </div>
-        <div class="field">
-          <label for="cadSenha">Senha</label>
-          <input class="input" type="password" id="cadSenha" required minlength="6" placeholder="Mínimo 6 caracteres">
-          <div class="password-strength"><span id="strengthBar"></span></div>
-        </div>
-        <div class="field">
-          <label for="cadConfirmarSenha">Confirmar senha</label>
-          <input class="input" type="password" id="cadConfirmarSenha" required minlength="6" placeholder="Repita a senha">
-          <p class="hint" id="confirmarSenhaHint" style="display:none;color:var(--danger);">As senhas não coincidem.</p>
-        </div>
-        <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.85rem;color:var(--text-muted);font-weight:400;margin-bottom:18px;">
-          <input type="checkbox" required style="margin-top:3px;">
-          <span>Concordo com os <a href="termos.html#termos-de-uso">Termos de Uso</a> e a <a href="termos.html#politica-de-privacidade">Política de Privacidade</a>.</span>
-        </label>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">Criar conta gratuita</button>
-      </form>
-      <p class="auth-foot-link">Já tem conta? <a href="login.html"><strong>Entrar</strong></a></p>
+      </div>
     </div>
   </div>
 </div>

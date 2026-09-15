@@ -41,3 +41,35 @@ export function isValidSinopse(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+// Validação de formato de e-mail (RFC 5322 simplificado)
+export function isValidEmail(value) {
+  if (typeof value !== 'string') return false;
+  const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  return re.test(value.trim());
+}
+
+// Sugere correção para erros de digitação comuns de provedores (ex: gmai.com -> gmail.com)
+export function suggestEmailCorrection(email) {
+  if (!email || typeof email !== 'string') return null;
+  const parts = email.trim().toLowerCase().split('@');
+  if (parts.length !== 2) return null;
+  const [user, domain] = parts;
+  if (!user || !domain) return null;
+  const commonTypos = {
+    'gmai.com': 'gmail.com',
+    'gamil.com': 'gmail.com',
+    'gmial.com': 'gmail.com',
+    'gmaill.com': 'gmail.com',
+    'gmaild.com': 'gmail.com',
+    'gmail.co': 'gmail.com',
+    'gmail.com.br': 'gmail.com',
+    'hotmial.com': 'hotmail.com',
+    'hotmai.com': 'hotmail.com',
+    'outlok.com': 'outlook.com',
+  };
+  if (commonTypos[domain]) {
+    return `${user}@${commonTypos[domain]}`;
+  }
+  return null;
+}
+

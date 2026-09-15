@@ -122,8 +122,28 @@ export async function signUpWithEmail({ nome, email, senha }) {
   const cred = await createUserWithEmailAndPassword(auth, email, senha);
   await updateProfile(cred.user, { displayName: nome });
   await createUserDoc(cred.user.uid, { nome, email });
-  sendEmailVerification(cred.user).catch(() => {}); // não bloqueia o cadastro se falhar
+  sendEmailVerification(cred.user).catch(() => {}); // dispara verificação de e-mail
   return cred.user;
+}
+
+export function getAuthCurrentUser() {
+  return auth.currentUser;
+}
+
+export async function checkEmailVerified() {
+  if (!auth.currentUser) return false;
+  await auth.currentUser.reload();
+  return auth.currentUser.emailVerified;
+}
+
+export async function resendVerificationEmail() {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Nenhum usuário conectado para reenviar verificação.');
+  await sendEmailVerification(user);
+}
+
+export function isCurrentUserEmailVerified() {
+  return auth.currentUser?.emailVerified ?? false;
 }
 
 export async function loginWithEmail({ email, senha }) {

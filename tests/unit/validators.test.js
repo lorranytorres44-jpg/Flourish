@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { maskCep, isValidCep, maskTelefone, isValidTelefone, isNomeCompleto, isValidSinopse } from '../../js/validators.js';
+import { maskCep, isValidCep, maskTelefone, isValidTelefone, isNomeCompleto, isValidSinopse, isValidEmail, suggestEmailCorrection } from '../../js/validators.js';
 
 describe('CEP da agência', () => {
   it('aplica a máscara 00000-000 enquanto digita', () => {
@@ -57,5 +57,27 @@ describe('sinopse obrigatória', () => {
     expect(isValidSinopse('   ')).toBe(false);
     expect(isValidSinopse(null)).toBe(false);
     expect(isValidSinopse(undefined)).toBe(false);
+  });
+});
+
+describe('validação e correção de e-mail/gmail', () => {
+  it('valida endereços de e-mail válidos', () => {
+    expect(isValidEmail('usuario@gmail.com')).toBe(true);
+    expect(isValidEmail('pedroca.borges013@gmail.com')).toBe(true);
+    expect(isValidEmail('leitor+flowrish@outlook.com')).toBe(true);
+    expect(isValidEmail('invalido')).toBe(false);
+    expect(isValidEmail('invalido@')).toBe(false);
+    expect(isValidEmail('@gmail.com')).toBe(false);
+    expect(isValidEmail('')).toBe(false);
+    expect(isValidEmail(null)).toBe(false);
+  });
+
+  it('detecta erros comuns de digitação no Gmail e sugere correção', () => {
+    expect(suggestEmailCorrection('usuario@gmai.com')).toBe('usuario@gmail.com');
+    expect(suggestEmailCorrection('usuario@gamil.com')).toBe('usuario@gmail.com');
+    expect(suggestEmailCorrection('usuario@gmial.com')).toBe('usuario@gmail.com');
+    expect(suggestEmailCorrection('usuario@gmail.co')).toBe('usuario@gmail.com');
+    expect(suggestEmailCorrection('usuario@gmail.com')).toBe(null);
+    expect(suggestEmailCorrection('usuario@outlook.com')).toBe(null);
   });
 });
