@@ -15,7 +15,7 @@ import {
   query, where, orderBy, onSnapshot, increment, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const DEFAULT_FOTO = 'https://i.pravatar.cc/150?img=5';
+const DEFAULT_FOTO = 'assets/default-avatar.svg';
 
 // -------- Estado em cache (preenchido pelo listener de autenticação) --------
 let cachedUser = null;

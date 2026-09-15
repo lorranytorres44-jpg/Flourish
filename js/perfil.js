@@ -31,7 +31,7 @@ const notaMedia = minhasAvaliacoes.length
   : 5;
 
 function renderHeader() {
-  document.getElementById('pFoto').src = session.foto || 'https://i.pravatar.cc/150?img=5';
+  document.getElementById('pFoto').src = session.foto || 'assets/default-avatar.svg';
   document.getElementById('pNome').textContent = session.nome || 'Leitor(a)';
   document.getElementById('pLocal').textContent = [session.cidade, session.estado].filter(Boolean).join(' / ') || 'Localização não informada';
   document.getElementById('pBio').textContent = session.bio || 'Ainda não escreveu uma biografia.';
@@ -99,7 +99,7 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
     </div>
     <form id="editForm">
       <div class="avatar-upload">
-        <img id="editAvatarPreview" src="${session.foto || 'https://i.pravatar.cc/150?img=5'}" alt="">
+        <img id="editAvatarPreview" src="${session.foto || 'assets/default-avatar.svg'}" alt="">
         <div>
           <label class="btn btn-secondary btn-sm" for="editFotoInput" style="cursor:pointer;">Alterar foto</label>
           <input type="file" id="editFotoInput" accept="image/*" class="visually-hidden">
