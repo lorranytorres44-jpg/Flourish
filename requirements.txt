@@ -1,0 +1,2 @@
+﻿# Flowrish - Dependencias Python para hospedagem (Render / Cloud)
+# O projeto utiliza a biblioteca padrao do Python (http.server)
