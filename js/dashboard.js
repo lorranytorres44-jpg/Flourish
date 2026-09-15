@@ -1,7 +1,7 @@
 import {
-  getSession, isLoggedIn, logout, getPoints, getMyBooks, getTrades,
+  getSession, isLoggedIn, logout, getPoints, getMyBooks, getTrades, subscribeTrades, deleteBook,
   getAnyBookById, getOwnerInfo, getAllBooks, TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, getEnvios, isDualTrade,
-  advanceTradeStatus, finalizeTrade, cancelTrade, updateTrade,
+  advanceTradeStatus, finalizeTrade, cancelTrade, updateTrade, canCancelTrade, isTradePosted, hasPrazoPostagemExpirado,
   cleanupExpiredMessages, setTradeAgencia, saveTradeTracking, addNotificationFor, getSavedAgencia, saveAgencia,
   sendChatMessage, subscribeChatMessages, getNotifications, getFavorites, getReadList,
   authReady, getTheme, setTheme,
@@ -94,9 +94,12 @@ function closeAllChatSubs() {
   chatUnsubs.clear();
 }
 
-async function renderTrades() {
+let latestTrades = [];
+
+async function renderTrades(tradesList) {
   closeAllChatSubs();
-  const trades = await getTrades();
+  const trades = tradesList || await getTrades();
+  latestTrades = trades;
   const list = document.getElementById('tradesList');
   if (trades.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="emoji">🔄</div><h3>Nenhuma troca ainda</h3><p>Explore a <a href="biblioteca.html">biblioteca</a> e solicite sua primeira troca.</p></div>`;
@@ -332,7 +335,11 @@ async function renderTrades() {
             <button class="btn btn-primary btn-sm" data-action="aceitar">✓ Aceitar</button>
             <button class="btn btn-secondary btn-sm" data-action="recusar">✕ Recusar</button>
           ` : ''}
-          ${!pendingDecision && !isCancelled && !isFinal && !algumFinalizado ? `<button class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar troca</button>` : ''}
+          ${!pendingDecision && !isCancelled && !isFinal && !algumFinalizado ? (
+            canCancelTrade(trade)
+              ? `<button class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar troca</button>`
+              : `<span class="badge" style="font-size:0.75rem;padding:6px 10px;background:var(--surface-alt);color:var(--text-muted);border-radius:12px;" title="Um dos livros já foi postado nos Correios. Não é permitido cancelar.">🔒 Postagem iniciada — cancelamento bloqueado</span>`
+          ) : ''}
           ${podeAvaliar ? `<button class="btn btn-highlight btn-sm" data-action="avaliar">⭐ Avaliar troca</button>` : ''}
           <button class="btn btn-ghost btn-sm" data-action="chat">💬 Chat</button>
           ${!isCancelled ? `<button class="btn btn-ghost btn-sm" data-action="rastreio">📦 Rastreamento</button>` : ''}
@@ -637,6 +644,11 @@ function openAgencyModal(trade, envio) {
 }
 
 function openCancelConfirmModal(tradeId) {
+  const trade = latestTrades.find(t => t.id === tradeId);
+  if (trade && !canCancelTrade(trade)) {
+    showToast('Cancelamento bloqueado', 'Não é possível cancelar uma troca após a postagem do livro nos Correios.', 'error');
+    return;
+  }
   openModal(`
     <div class="modal-header">
       <h3 id="cancelTitle">Cancelar troca</h3>
@@ -681,8 +693,64 @@ async function submitChatMessage(trade, card) {
 
 await renderTrades();
 
+// Atualização em tempo real das trocas (não precisa dar F5)
+subscribeTrades(async (updatedTrades) => {
+  await renderTrades(updatedTrades);
+  await renderOverview();
+});
+
 // ---------- Livros anunciados ----------
-await renderBookGrid(document.getElementById('gridAnunciadosDash'), await getMyBooks(), 'Nenhum livro anunciado ainda.');
+async function refreshMyBooksDash() {
+  await renderBookGrid(document.getElementById('gridAnunciadosDash'), await getMyBooks(), 'Nenhum livro anunciado ainda.', {
+    showDelete: true,
+    onDeleteBook: (bookId, bookTitle) => {
+      openModal(`
+        <div class="modal-header">
+          <h3 id="delBookTitleDash">Excluir livro anunciado</h3>
+          <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
+        </div>
+        <p>Tem certeza que deseja excluir o anúncio de <strong>"${bookTitle || 'este livro'}"</strong>?</p>
+        <p class="text-muted" style="font-size:0.85rem;">Ele será removido imediatamente da biblioteca.</p>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button type="button" class="btn btn-secondary btn-block" data-modal-close>Cancelar</button>
+          <button type="button" class="btn btn-primary btn-block" id="btnConfirmDelDash" style="background:var(--danger);border-color:var(--danger);">Sim, excluir livro</button>
+        </div>
+      `, {
+        labelledBy: 'delBookTitleDash',
+        onMount: (overlay, close) => {
+          overlay.querySelector('#btnConfirmDelDash').addEventListener('click', async (e) => {
+            e.target.disabled = true;
+            try {
+              await deleteBook(bookId);
+              close();
+              showToast('Livro excluído', 'O anúncio foi removido com sucesso.', 'success');
+              await refreshMyBooksDash();
+              await renderOverview();
+            } catch (err) {
+              showToast('Erro ao excluir', err.message || '', 'error');
+              e.target.disabled = false;
+            }
+          });
+        }
+      });
+    }
+  });
+}
+await refreshMyBooksDash();
+
+window.addEventListener('tdl:points-changed', (e) => {
+  const pts = e.detail?.pontos ?? getPoints() ?? 0;
+  const el = document.getElementById('pontosSaldo');
+  if (el) el.textContent = `${pts} pontos`;
+  const ov = document.getElementById('ovPontos');
+  if (ov) ov.textContent = pts;
+});
+
+window.addEventListener('tdl:auth-changed', renderOverview);
+window.addEventListener('tdl:book-deleted', async () => {
+  await refreshMyBooksDash();
+  await renderOverview();
+});
 
 // ---------- Favoritos ----------
 const favBooksDash = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
