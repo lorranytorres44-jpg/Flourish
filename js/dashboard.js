@@ -711,12 +711,13 @@ window.addEventListener('tdl:notification', renderNotifDash);
 
 // ---------- Configurações ----------
 const darkToggle = document.getElementById('darkModeToggle');
-darkToggle.checked = getTheme() === 'dark';
-darkToggle.addEventListener('change', () => {
-  const theme = darkToggle.checked ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  setTheme(theme);
-});
+if (darkToggle) {
+  darkToggle.checked = false;
+  darkToggle.addEventListener('change', () => {
+    document.documentElement.setAttribute('data-theme', 'light');
+    setTheme('light');
+  });
+}
 document.getElementById('logoutBtnDash').addEventListener('click', async () => {
   await logout();
   window.location.href = 'index.html';

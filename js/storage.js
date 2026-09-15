@@ -557,10 +557,10 @@ export function unreadCount() {
   return cachedNotifications.filter(n => !n.lida).length;
 }
 
-// -------- Tema (segue local por dispositivo, não é dado de conta) --------
+// -------- Tema (padrão único: tema claro) --------
 export function getTheme() {
-  return localStorage.getItem('tdl_theme')?.replace(/"/g, '') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  return 'light';
 }
 export function setTheme(theme) {
-  localStorage.setItem('tdl_theme', theme);
+  localStorage.setItem('tdl_theme', 'light');
 }
