@@ -38,23 +38,23 @@ export function renderNavbar(activePage = '') {
     ? `
       <div class="user-menu">
         <button class="btn-icon notif-btn" aria-label="Notificações" id="notifBtn">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
           ${unreadCount() > 0 ? '<span class="notif-dot"></span>' : ''}
         </button>
         <div class="notif-panel" id="notifPanel"></div>
       </div>
-      <span class="points-pill" title="Seus pontos">★ ${points ?? 0}</span>
+      <span class="points-pill" title="Seus pontos">🌸 ${points ?? 0} pts</span>
       <div class="user-menu">
         <button class="user-avatar-btn" id="userMenuBtn">
-          <img src="${session.foto}" alt="" width="32" height="32">
+          <img src="${session.foto || 'assets/default-avatar.svg'}" alt="" width="34" height="34">
           <span>${session.nome.split(' ')[0]}</span>
         </button>
         <div class="dropdown-menu" id="userDropdown">
-          <a href="perfil.html">Meu Perfil</a>
-          <a href="dashboard.html">Minha Área</a>
-          <a href="cadastrar-livro.html">Anunciar Livro</a>
+          <a href="perfil.html">👤 Meu Perfil</a>
+          <a href="dashboard.html">📊 Minha Área</a>
+          <a href="cadastrar-livro.html">➕ Anunciar Livro</a>
           <div class="dropdown-divider"></div>
-          <button id="logoutBtn">Sair</button>
+          <button id="logoutBtn">🚪 Sair</button>
         </div>
       </div>
     `
@@ -73,16 +73,13 @@ export function renderNavbar(activePage = '') {
   root.innerHTML = `
     <header class="navbar">
       <div class="navbar-inner">
-        <a href="index.html" class="logo">
-          <span class="logo-mark" aria-hidden="true">
-            <img src="assets/livro-logo.png" width="20" height="20" alt="">
-          </span>
-          <span class="logo-text">Flowrish</span>
+        <a href="index.html" class="logo" aria-label="Flourish Início">
+          <img src="assets/logo-horizontal.png" alt="Flourish" class="logo-horizontal-img">
         </a>
         <nav class="nav-links" aria-label="Navegação principal">${linksHTML}</nav>
         <form class="nav-search" role="search" id="navSearchForm">
           <span class="icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           </span>
           <input type="search" id="navSearchInput" placeholder="Buscar livros, autores..." aria-label="Buscar livros">
         </form>
@@ -90,15 +87,15 @@ export function renderNavbar(activePage = '') {
           ${themeBtnHTML}
           ${authArea}
           <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
           </button>
         </div>
       </div>
     </header>
     <div class="mobile-drawer" id="mobileDrawer">
       <div class="mobile-drawer-panel">
-        <div class="flex justify-between items-center" style="margin-bottom:12px;">
-          <strong>Menu</strong>
+        <div class="flex justify-between items-center" style="margin-bottom:14px;">
+          <img src="assets/logo-horizontal-marrom.png" alt="Flourish" style="height:36px;">
           <button class="btn-icon" id="closeDrawer" aria-label="Fechar menu">✕</button>
         </div>
         <form class="nav-search mobile-search" id="mobileSearchForm">
@@ -112,10 +109,35 @@ export function renderNavbar(activePage = '') {
           <span id="mobileThemeText">${curTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
         </button>
         <div class="dropdown-divider"></div>
-        ${session ? `<a href="perfil.html">Meu Perfil</a><button id="mobileLogout">Sair</button>` : `<a href="login.html">Entrar</a><a href="cadastro.html">Cadastrar</a>`}
+        ${session ? `<a href="perfil.html">Meu Perfil</a><button id="mobileLogout">Sair</button>` : `<a href="login.html" class="btn btn-ghost btn-block">Entrar</a><a href="cadastro.html" class="btn btn-primary btn-block">Cadastrar</a>`}
       </div>
     </div>
   `;
+
+  // ---- Sliding pill indicator ----
+  const navLinksEl = root.querySelector('.nav-links');
+  if (navLinksEl) {
+    const slider = document.createElement('span');
+    slider.className = 'nav-pill-slider';
+    navLinksEl.prepend(slider);
+
+    function moveSliderTo(linkEl) {
+      if (!linkEl) return;
+      const navRect = navLinksEl.getBoundingClientRect();
+      const linkRect = linkEl.getBoundingClientRect();
+      const left = linkRect.left - navRect.left;
+      navLinksEl.style.setProperty('--pill-left', left + 'px');
+      navLinksEl.style.setProperty('--pill-width', linkRect.width + 'px');
+    }
+
+    const activeLink = navLinksEl.querySelector('a.active');
+    setTimeout(() => moveSliderTo(activeLink), 10);
+
+    navLinksEl.querySelectorAll('a').forEach(a => {
+      a.addEventListener('mouseenter', () => moveSliderTo(a));
+      a.addEventListener('mouseleave', () => moveSliderTo(navLinksEl.querySelector('a.active')));
+    });
+  }
 
   const handleThemeToggle = () => {
     const newTheme = toggleTheme();

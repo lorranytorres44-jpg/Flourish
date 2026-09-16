@@ -1,16 +1,27 @@
+/* ============================================
+   Perfil — Onepage 3D Soft UI
+   ============================================ */
 .profile-header {
-  padding: calc(var(--header-h) + 40px) 0 40px;
-  background: linear-gradient(180deg, var(--sage-light), var(--bg) 90%);
+  padding: calc(84px + 52px) 0 52px;
+  background: var(--verde-oliva-dark);
+  border-bottom: 1.5px solid var(--border);
 }
-[data-theme="dark"] .profile-header { background: linear-gradient(180deg, var(--bg-alt), var(--bg) 90%); }
 .profile-top {
-  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  display: flex; gap: 32px; align-items: center; flex-wrap: wrap;
+  background: var(--surface-card); padding: 36px; border-radius: 32px;
+  border: 1.5px solid var(--border); box-shadow: var(--shadow-3d-card);
 }
-.profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: var(--shadow-md); }
-.profile-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.profile-stats-row { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
-.profile-stats-row div strong { display: block; font-family: var(--font-heading); font-size: 1.3rem; }
-.profile-stats-row div span { font-size: 0.8rem; color: var(--text-muted); }
-.profile-body { padding: 40px 0 72px; }
-.profile-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.profile-avatar {
+  width: 130px; height: 130px;
+  border-radius: 50%; object-fit: cover;
+  border: 4px solid var(--primary);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+}
+.profile-name-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.profile-name-row h1 { font-family: var(--font-heading); font-size: 2.3rem; color: var(--creme); margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
+.profile-stats-row { display: flex; gap: 36px; margin-top: 20px; flex-wrap: wrap; }
+.profile-stats-row div strong { display: block; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: var(--creme); }
+.profile-stats-row div span { font-size: 0.88rem; color: var(--text-marrom-light); font-weight: 700; }
+.profile-body { padding: 48px 0 80px; }
+.profile-genres { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }

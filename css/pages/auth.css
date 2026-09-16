@@ -1,61 +1,118 @@
+/* ============================================
+   Auth Pages — Onepage 3D Soft UI
+   ============================================ */
 .auth-wrap {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
+  background: var(--bg);
 }
 .auth-visual {
-  background: linear-gradient(160deg, var(--sage), var(--sage-dark));
+  background: var(--verde-oliva-dark);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 60px;
-  color: var(--accent-contrast);
+  align-items: flex-start;
+  padding: 64px;
+  color: var(--text-marrom);
   position: relative;
   overflow: hidden;
 }
 .auth-visual::before {
   content: '';
   position: absolute;
-  width: 300px; height: 300px;
+  width: 440px; height: 440px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  top: -100px; left: -100px;
+  background: var(--surface-card);
+  top: -120px; left: -100px;
+  opacity: 0.45;
+  filter: blur(40px);
 }
-.auth-visual h2 { color: var(--accent-contrast); position: relative; z-index: 1; }
-.auth-visual p { color: color-mix(in srgb, var(--accent-contrast) 80%, transparent); max-width: 380px; position: relative; z-index: 1; }
-.auth-visual .quote-card {
-  background: rgba(255,255,255,0.5);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-top: 30px;
-  max-width: 360px;
+.auth-visual-logo {
+  max-width: 240px;
+  margin-bottom: 32px;
   position: relative; z-index: 1;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.4));
 }
+.auth-visual h2 { color: var(--creme); position: relative; z-index: 1; font-size: 2.2rem; }
+.auth-visual p { color: var(--text-marrom-light); max-width: 420px; position: relative; z-index: 1; font-size: 1.08rem; }
+
+.auth-visual .quote-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid var(--border);
+  border-radius: 28px;
+  padding: 28px;
+  margin-top: 36px;
+  max-width: 420px;
+  position: relative; z-index: 1;
+  color: var(--text-marrom);
+  box-shadow: var(--shadow-3d-card);
+}
+.auth-visual .quote-card p {
+  color: var(--creme);
+  font-style: italic;
+  margin-bottom: 10px;
+  font-size: 1.02rem;
+}
+.auth-visual .quote-card cite {
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--rosa-pastel);
+}
+
 .auth-form-side {
   display: flex; align-items: center; justify-content: center;
-  padding: 40px 24px;
+  padding: 48px 28px;
 }
-.auth-box { width: 100%; max-width: 420px; }
-.auth-box .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; color: var(--text-muted); font-size: 0.9rem; }
-.auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--text-muted); font-size: 0.85rem; }
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.btn-google {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 12px; border-radius: var(--radius-pill);
-  border: 1.5px solid var(--border); background: var(--bg-alt); color: var(--text);
-  font-weight: 600;
+.auth-box {
+  width: 100%; max-width: 460px;
+  background: var(--surface-card);
+  padding: 44px 40px;
+  border-radius: 32px; /* 3D Soft Box Radius */
+  box-shadow: var(--shadow-3d-card);
+  border: 1.5px solid var(--border);
 }
-.btn-google:hover { background: var(--sage-light); }
-.auth-foot-link { text-align: center; margin-top: 22px; font-size: 0.92rem; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.avatar-upload {
-  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+.auth-box .back-home {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 18px; border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(100, 102, 66, 0.9) 0%, rgba(78, 79, 49, 0.95) 100%);
+  border: 1px solid var(--border);
+  margin-bottom: 24px; color: var(--creme);
+  font-size: 0.88rem; font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
 }
-.avatar-upload img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
-.password-strength { height: 5px; border-radius: 4px; background: var(--border); margin-top: 8px; overflow: hidden; }
-.password-strength span { display: block; height: 100%; width: 0%; background: var(--danger); transition: width .3s ease, background .3s ease; }
+.auth-box .back-home:hover { color: #FFFFFF; border-color: var(--primary); transform: translateY(-2px); }
+.auth-box h2 { margin-bottom: 8px; color: var(--creme); font-size: 1.8rem; }
+.auth-box p.auth-sub { color: var(--text-marrom-light); margin-bottom: 28px; font-size: 1rem; }
 
-@media (max-width: 900px) {
+.auth-divider { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; padding: 15px; border-radius: 9999px; /* 3D Pill Button */
+  border: 1.5px solid var(--border);
+  background: linear-gradient(180deg, rgba(100, 102, 66, 0.95) 0%, rgba(78, 79, 49, 0.98) 100%);
+  color: var(--creme);
+  font-weight: 700;
+  box-shadow: var(--shadow-3d-btn-secondary);
+  transition: all 0.22s ease;
+  cursor: pointer;
+}
+.btn-google:hover {
+  background: linear-gradient(180deg, rgba(115, 117, 76, 0.98) 0%, rgba(88, 90, 56, 1) 100%);
+  border-color: var(--primary); color: #FFFFFF;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.5);
+}
+
+.auth-foot-link { text-align: center; margin-top: 24px; font-size: 0.96rem; color: var(--text-marrom-light); }
+.auth-foot-link a { font-weight: 700; color: var(--rosa-pastel); }
+
+@media (max-width: 850px) {
   .auth-wrap { grid-template-columns: 1fr; }
   .auth-visual { display: none; }
 }

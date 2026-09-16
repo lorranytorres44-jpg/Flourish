@@ -1,181 +1,304 @@
+/* ============================================
+   Dashboard — Onepage 3D Soft UI
+   ============================================ */
 .dash-wrap {
-  padding-top: var(--header-h);
+  padding-top: 84px;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 270px 1fr;
   min-height: 100vh;
+  background: var(--bg);
 }
 .dash-sidebar {
-  border-right: 1px solid var(--border);
-  padding: 28px 16px;
+  border-right: 1.5px solid var(--border);
+  padding: 32px 20px;
   position: sticky;
-  top: var(--header-h);
-  height: calc(100vh - var(--header-h));
+  top: 84px;
+  height: calc(100vh - 84px);
   overflow-y: auto;
+  background: var(--surface);
+  box-shadow: 6px 0 24px rgba(0,0,0,0.35);
 }
 .dash-sidebar button {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   width: 100%; text-align: left;
-  padding: 12px 14px; border-radius: var(--radius-sm);
-  background: transparent; border: none; color: var(--text-muted);
-  font-weight: 600; font-size: 0.92rem; margin-bottom: 4px;
+  padding: 14px 20px; border-radius: 9999px; /* 3D Pill Shape */
+  background: transparent; border: 1.5px solid transparent; color: var(--text-marrom-light);
+  font-weight: 700; font-size: 0.96rem; margin-bottom: 8px;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
-.dash-sidebar button.active, .dash-sidebar button:hover { background: var(--sage-light); color: var(--accent-contrast); }
-.dash-main { padding: 32px 32px 72px; max-width: 1240px; }
-.dash-section { display: none; }
-.dash-section.active { display: block; }
+.dash-sidebar button.active {
+  background: linear-gradient(180deg, #F5ACB5 0%, #DF949D 45%, #C87882 100%);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 24px -4px rgba(223, 148, 157, 0.65), inset 0 1.5px 2px rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 2px rgba(56, 25, 29, 0.3);
+}
+.dash-sidebar button:hover:not(.active) {
+  background: linear-gradient(180deg, rgba(100, 102, 66, 0.9) 0%, rgba(78, 79, 49, 0.95) 100%);
+  border-color: var(--border);
+  color: var(--creme);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
 
-.overview-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 32px; }
-.overview-card { padding: 22px; text-align: center; }
-.overview-card .num { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; }
-.overview-card .label { font-size: 0.82rem; color: var(--text-muted); }
-.overview-card.overview-card-highlight {
-  background: var(--highlight);
-  border-color: var(--highlight);
-  transform: scale(1.05);
+.dash-main {
+  padding: 40px 40px 80px;
+  max-width: 1280px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
-[data-theme="dark"] .overview-card.overview-card-highlight {
-  background: var(--terracotta-dark);
-  border-color: var(--terracotta-dark);
+.dash-section { display: none; }
+.dash-section.active { display: block; animation: fadeInUp 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+
+.overview-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 36px; }
+.overview-card {
+  padding: 28px 24px; text-align: center;
+  background: var(--surface-card);
+  border-radius: 28px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-3d-card);
+  transition: transform 0.25s ease;
+}
+.overview-card:hover {
+  transform: translateY(-5px);
+}
+.overview-card .num { font-family: var(--font-heading); font-size: 2.3rem; font-weight: 700; color: var(--creme); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.overview-card .label { font-size: 0.9rem; color: var(--text-marrom-light); font-weight: 700; margin-top: 4px; }
+
+.overview-card.overview-card-highlight {
+  background: linear-gradient(180deg, #F5ACB5 0%, #DF949D 45%, #C87882 100%);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 14px 30px -4px rgba(223, 148, 157, 0.7), inset 0 1.5px 2px rgba(255, 255, 255, 0.8);
 }
 .overview-card.overview-card-highlight .num,
-.overview-card.overview-card-highlight .label { color: #fff; }
+.overview-card.overview-card-highlight .label { color: #FFFFFF; text-shadow: 0 1px 2px rgba(56, 25, 29, 0.3); }
 
-.trade-card { padding: 22px; margin-bottom: 18px; }
-.trade-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 22px; }
-.trade-card-badge { flex-shrink: 0; }
-.trade-card-title { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin: 0; }
-.trade-card-head { display: flex; gap: 14px; align-items: center; }
-.trade-card-meta { margin: 38px 0 24px; }
-.trade-books-row { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; flex: 1; }
-.trade-book-item { display: flex; gap: 10px; align-items: center; }
-.trade-book-item img { width: 54px; aspect-ratio: 3/4; object-fit: cover; border-radius: 6px; }
-.trade-book-item strong { display: block; font-family: var(--font-body); font-size: 0.95rem; font-weight: 700; }
-.trade-book-item p { font-size: 0.8rem; }
-.trade-book-owner { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
-.trade-swap-icon {
-  display: flex; align-items: center; justify-content: center;
-  align-self: center;
-  font-size: 2rem; font-weight: 700; color: var(--text-muted);
-  transform: rotate(90deg);
+/* Ensure books grid inside dashboard is 100% identical to biblioteca.html */
+.dash-main .book-grid, .dash-main .books-grid, #gridRecomendados, #gridAnunciadosDash, #gridFavoritosDash {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 24px !important;
+  width: 100% !important;
+  margin-top: 16px !important;
 }
-.trade-card-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-.deadline-warning { color: var(--highlight-dark); font-size: 0.82rem; font-weight: 600; }
 
-.trade-vermais-btn { margin-top: 12px; }
-.details-panel { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.details-panel.open { display: flex; flex-direction: column; gap: 16px; }
-.detail-book, .detail-profile { display: flex; gap: 12px; align-items: flex-start; }
-.detail-book img { width: 60px; aspect-ratio: 3/4; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-.detail-profile img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.detail-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
-.detail-sinopse { font-size: 0.82rem; margin-top: 4px; }
+/* ============================================
+   Global Messenger & Chat Center — Onepage 3D Soft UI
+   ============================================ */
+.messenger-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background: var(--surface-card);
+  border-radius: 28px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-3d-card);
+  min-height: 520px;
+  overflow: hidden;
+  margin-top: 20px;
+}
 
-.chat-panel { display: none; margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-.chat-panel.open { display: block; }
-.chat-messages { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 6px; margin-bottom: 12px; }
-.chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.88rem; }
-.chat-bubble.me { align-self: flex-end; background: var(--sage); color: var(--accent-contrast); border-bottom-right-radius: 4px; }
-.chat-bubble.them { align-self: flex-start; background: var(--bg-alt); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-.chat-input-row { display: flex; gap: 8px; }
-.chat-disclaimer { font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; }
+.messenger-conversations {
+  border-right: 1.5px solid var(--border);
+  background: var(--verde-oliva-dark);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.messenger-conversations h3 {
+  font-family: var(--font-heading);
+  color: var(--creme);
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  padding-left: 8px;
+}
 
-.tracking-panel { display: none; margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-.tracking-panel.open { display: block; }
+.chat-user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 9999px; /* 3D Pill */
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-marrom-light);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-align: left;
+  width: 100%;
+}
+.chat-user-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--creme);
+}
+.chat-user-item.active {
+  background: linear-gradient(180deg, #F5ACB5 0%, #DF949D 45%, #C87882 100%);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 20px -4px rgba(223, 148, 157, 0.6), inset 0 1.5px 2px rgba(255, 255, 255, 0.7);
+}
+.chat-user-item img {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.chat-user-item .chat-user-info strong {
+  display: block;
+  font-size: 0.92rem;
+}
+.chat-user-item .chat-user-info span {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  display: block;
+}
 
-.settings-grid { display: grid; gap: 20px; max-width: 480px; }
+.messenger-window {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+}
+.messenger-header {
+  padding: 16px 24px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.messenger-header img {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary);
+}
+.messenger-header h4 {
+  font-family: var(--font-heading);
+  color: var(--creme);
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.messenger-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 380px;
+  min-height: 300px;
+}
+.chat-bubble {
+  max-width: 75%;
+  padding: 12px 18px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  word-wrap: break-word;
+}
+.chat-bubble.me {
+  align-self: flex-end;
+  background: linear-gradient(180deg, #F5ACB5 0%, #DF949D 45%, #C87882 100%);
+  color: #FFFFFF;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 8px 20px -4px rgba(223, 148, 157, 0.5), inset 0 1.5px 2px rgba(255, 255, 255, 0.7);
+}
+.chat-bubble.them {
+  align-self: flex-start;
+  background: linear-gradient(180deg, rgba(100, 102, 66, 0.95) 0%, rgba(78, 79, 49, 0.98) 100%);
+  color: var(--creme);
+  border: 1.5px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.messenger-footer {
+  padding: 16px 24px;
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.messenger-footer input {
+  flex: 1;
+}
+
+/* Trade Cards in Dashboard */
+.trade-card {
+  background: var(--surface-card);
+  border-radius: 24px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-3d-card);
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.2s ease;
+}
+.trade-card:hover {
+  transform: translateY(-4px);
+}
+.trade-books-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.trade-book-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--verde-oliva-dark);
+  padding: 12px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+.trade-book-item img {
+  width: 50px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Dual Trade Columns */
+.trade-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 14px;
+}
+.trade-col {
+  background: var(--verde-oliva-dark);
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-clay-input);
+}
+.agencia-card {
+  background: var(--surface-card);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-top: 12px;
+}
 
 @media (max-width: 900px) {
+  .trade-columns { grid-template-columns: 1fr; }
   .dash-wrap { grid-template-columns: 1fr; }
-  .dash-sidebar { position: static; height: auto; display: flex; overflow-x: auto; gap: 4px; padding: 16px; border-right: none; border-bottom: 1px solid var(--border); }
-  .dash-sidebar button { white-space: nowrap; width: auto; }
-  .dash-main { padding: 24px 16px 60px; }
+  .dash-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
   .overview-cards { grid-template-columns: repeat(2, 1fr); }
+  .dash-main { padding: 24px 16px 64px; }
+  .messenger-container { grid-template-columns: 1fr; }
 }
-
-/* Agência dos Correios escolhida para retirada (visível para os dois lados) */
-.trade-agencia {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
-  margin: 18px 0; padding: 14px 16px;
-  background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-md);
+@media (max-width: 500px) {
+  .overview-cards { grid-template-columns: 1fr; }
 }
-.trade-agencia-pending { border-color: var(--highlight-dark); }
-.trade-agencia-info { flex: 1; min-width: 220px; }
-.trade-agencia-info strong { display: block; margin-bottom: 4px; }
-.trade-agencia-info p { font-size: 0.86rem; }
-.trade-agencia-waiting { margin: 18px 0; font-size: 0.86rem; color: var(--text-muted); font-weight: 600; }
-
-
-/* Rastreamento pelos Correios */
-.tracking-event { margin-top: 14px; padding: 12px 14px; background: var(--bg-alt); border-radius: var(--radius-md); }
-.tracking-event p { font-size: 0.84rem; }
-.tracking-history { list-style: none; padding: 0; margin: 10px 0 0; font-size: 0.82rem; }
-.tracking-history li { padding: 4px 0; border-bottom: 1px dashed var(--border); }
-.tracking-history li span { color: var(--text-muted); margin-right: 8px; }
-.tracking-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-.tracking-panel .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
-[hidden] { display: none !important; }
-.agencia-map-link { display: inline-block; margin-top: 4px; font-size: 0.82rem; font-weight: 600; }
-
-/* Modal de agência de retirada */
-.agencia-manual .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-@media (max-width: 560px) {
-  .agencia-manual .row-2 { grid-template-columns: 1fr; }
-}
-
-/* "i" no canto do card e guia Clique e Retire */
-.trade-info-btn { width: 32px; height: 32px; flex-shrink: 0; font-family: var(--font-heading); font-weight: 700; font-style: italic; font-size: 1rem; }
-.clique-retire-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
-.clique-retire-steps > li { display: flex; gap: 12px; align-items: flex-start; font-size: 0.92rem; line-height: 1.5; }
-.clique-retire-steps ul { list-style: disc; margin: 6px 0 0; padding-left: 18px; font-style: italic; }
-.clique-retire-icon {
-  flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--bg-alt); border: 1px solid var(--border); font-size: 1.2rem;
-}
-.clique-retire-etiqueta {
-  display: inline-block; margin-top: 6px; padding: 8px 12px 10px;
-  background: #fff; color: #111; border: 1px solid #999; border-radius: 4px;
-  font-family: Arial, Helvetica, sans-serif; font-size: 0.78rem; line-height: 1.4;
-}
-.clique-retire-etiqueta-titulo { display: block; width: fit-content; background: #111; color: #fff; padding: 1px 6px; font-weight: 700; margin-bottom: 4px; }
-.clique-retire-etiqueta-cep { display: inline-block; margin-top: 4px; }
-.agencia-salvar { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-.agencia-salva-aviso { font-size: 0.82rem; margin-top: 6px; }
-
-/* Troca livro por livro: um bloco por envio (agência + etapas + ação), separados por linha */
-.trade-envio + .trade-envio { margin-top: 12px; padding-top: 18px; border-top: 1px dashed var(--border); }
-.trade-envio-title { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
-.trade-envio-title strong { color: var(--text); }
-.trade-envio-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 16px; }
-.tracking-envio + .tracking-envio { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); }
-
-/* Troca livro por livro: uma coluna por livro (dados do livro / entrega / status) */
-/* As duas colunas dividem as mesmas linhas (título, livro, entrega, status), então
-   as caixas ficam alinhadas lado a lado mesmo com conteúdos de alturas diferentes. */
-.trade-dual {
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr;
-  grid-auto-flow: column; column-gap: 18px; row-gap: 12px; margin: 4px 0 14px;
-}
-.trade-dual-col { display: contents; }
-.trade-dual-col .trade-envio-title { margin-bottom: 0; min-width: 0; }
-.trade-dual-box {
-  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-alt);
-  padding: 14px 16px; min-width: 0;
-}
-.trade-dual-box-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 10px; }
-.trade-dual-box .trade-book-item { align-items: flex-start; }
-.trade-dual-box .trade-book-item + .trade-book-item { margin-top: 10px; }
-.trade-dual-entrega .trade-agencia { margin: 0; padding: 0; background: none; border: none; }
-.trade-dual-entrega .trade-agencia-info > strong { display: none; }
-.trade-dual-entrega .trade-agencia-waiting { margin: 0; }
-.trade-dual-box .trade-envio-actions { margin: 4px 0 0; }
-@media (max-width: 760px) {
-  .trade-dual { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
-}
-
-/* Rastreio da troca livro por livro: uma caixa por coluna, na mesma ordem dos livros */
-.trade-dual-tracking { grid-template-rows: none; grid-auto-flow: row; margin: 0; }
-.trade-dual-tracking .tracking-envio + .tracking-envio { margin-top: 0; padding-top: 14px; border-top: none; }
-.trade-dual-tracking .trade-envio-title { margin-bottom: 10px; }
-.trade-dual-tracking .tracking-envio .input { max-width: 100%; }

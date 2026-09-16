@@ -1,30 +1,38 @@
+/* ============================================
+   Biblioteca — Dark Olive Organic Soft UI
+   ============================================ */
 .library-header {
-  padding: calc(var(--header-h) + 32px) 0 32px;
-  background: var(--bg-alt);
+  padding: calc(80px + 40px) 0 40px;
+  background: var(--verde-oliva-dark);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 .library-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 32px;
+  grid-template-columns: 280px 1fr;
+  gap: 36px;
   align-items: start;
-  padding: 32px 0 72px;
+  padding: 40px 0 80px;
 }
 .filters-panel {
   position: sticky;
-  top: calc(var(--header-h) + 16px);
-  padding: 22px;
-  max-height: calc(100vh - var(--header-h) - 32px);
+  top: calc(80px + 20px);
+  padding: 28px;
+  background: var(--surface-card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-clay-card);
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
 }
-.filters-panel h3 { font-size: 1rem; margin-bottom: 16px; }
-.filter-group { margin-bottom: 22px; }
-.filter-group .group-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; color: var(--text); }
+.filters-panel h3 { font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 20px; color: var(--creme); }
+.filter-group { margin-bottom: 24px; }
+.filter-group .group-label { font-weight: 700; font-size: 0.94rem; margin-bottom: 10px; display: block; color: var(--text-marrom); }
 .results-toolbar {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
 }
-.results-count { color: var(--text-muted); font-size: 0.9rem; }
+.results-count { color: var(--text-marrom-light); font-size: 0.95rem; font-weight: 600; }
 @media (max-width: 960px) {
   .library-layout { grid-template-columns: 1fr; }
   .filters-panel { position: static; max-height: none; }
