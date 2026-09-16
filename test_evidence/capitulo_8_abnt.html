@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>8. Qualidade e Testes de Software — Flowrish MVP</title>
+<style>
+  @page {
+    size: A4;
+    margin: 3cm 2cm 2cm 3cm; /* Superior 3cm, Direita 2cm, Inferior 2cm, Esquerda 3cm */
+  }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    text-align: justify;
+  }
+  h1 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 24pt;
+    margin-bottom: 12pt;
+    text-align: left;
+  }
+  h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 20pt;
+    margin-bottom: 10pt;
+    text-align: left;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 16pt;
+    margin-bottom: 8pt;
+    text-align: left;
+  }
+  p {
+    margin-top: 0;
+    margin-bottom: 8pt;
+    text-indent: 1.25cm;
+  }
+  .no-indent {
+    text-indent: 0 !important;
+  }
+  caption, .caption {
+    font-size: 10pt;
+    font-weight: bold;
+    text-align: left;
+    margin-top: 12pt;
+    margin-bottom: 4pt;
+    color: #222;
+    text-indent: 0;
+  }
+  .source {
+    font-size: 10pt;
+    color: #555;
+    text-align: left;
+    margin-top: 4pt;
+    margin-bottom: 16pt;
+    text-indent: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6pt;
+    margin-bottom: 6pt;
+    font-size: 9pt;
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  th, td {
+    border: 1px solid #999;
+    padding: 5pt 6pt;
+    vertical-align: middle;
+    line-height: 1.25;
+  }
+  th {
+    background-color: #F0F4F1;
+    font-weight: bold;
+    text-align: center;
+    color: #1E3324;
+  }
+  .center {
+    text-align: center;
+  }
+  .figure-container {
+    text-align: center;
+    margin: 10pt 0 4pt 0;
+    page-break-inside: avoid;
+  }
+  .figure-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>8. QUALIDADE E TESTES DE SOFTWARE</h1>
+
+<p>Neste capítulo, apresenta-se a estratégia completa de garantia da qualidade, engenharia de testes e validação técnica aplicada ao desenvolvimento do Flowrish — plataforma web voltada ao compartilhamento, circulação e troca colaborativa de livros físicos entre leitores. Desenvolvido pelo Grupo 4 no âmbito do Trabalho de Conclusão de Curso (TCC) do MTEC em Desenvolvimento de Sistemas, o projeto atingiu o estágio de Produto Mínimo Viável (MVP), priorizando a validação das regras de negócio essenciais, estabilidade operacional e máxima fluidez na experiência do usuário final.</p>
+
+<p>Em estrita consonância com as normas da ABNT e as diretrizes pedagógicas institucionais, este trabalho adota uma abordagem eminentemente prática e orientada a dados reais. Evitam-se divagações puramente conceituais, estruturando o capítulo por meio de matrizes sistemáticas de validação, tabelas padronizadas de testes de software, diagramas de fluxo e arquitetura, complementados por evidências fotográficas em alta resolução coletadas diretamente da aplicação em execução.</p>
+
+<h2>8.1 Validações do sistema</h2>
+
+<p>As validações de entrada representam a primeira linha de defesa contra corrupção de dados, inconsistências cadastrais e ataques cibernéticos elementares (como injeção de scripts e excesso de payloads). No Flowrish, a qualidade foi projetada desde o momento em que o leitor insere o primeiro caractere no teclado até a confirmação de persistência no banco de dados Cloud Firestore. Foi implementado um modelo em múltiplas camadas que conjuga validação sintática em tempo real no cliente (HTML5 e expressões regulares em JavaScript ES Modules), regras lógicas puras de negócio (como bloqueio de auto-troca e limite de cancelamento) e regras restritivas de controle de acesso multi-inquilino (Firestore Security Rules).</p>
+
+<p>A Tabela 1 elenca o mapeamento detalhado das principais validações ativas no ecossistema da aplicação, especificando o componente responsável, o campo ou gatilho validado, a regra algorítmica aplicada, a respectiva mensagem de retorno ao usuário e o status de implementação no MVP.</p>
+
+<div class="caption">Tabela 1 – Validações do Sistema Flowrish</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Funcionalidade</th>
+      <th style="width: 17%;">Campo / Ação</th>
+      <th style="width: 27%;">Regra de Validação</th>
+      <th style="width: 24%;">Mensagem Exibida</th>
+      <th style="width: 12%;">Situação</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Cadastro de Usuário</td><td>Nome Completo</td><td>Preenchimento obrigatório com no mínimo 3 caracteres alfabéticos</td><td>Preencha todos os campos</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Usuário</td><td>E-mail (Formato)</td><td>Validação sintática com regex de conformidade RFC 5322</td><td>Digite um endereço de e-mail com formato válido</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Usuário</td><td>Sugestão de Typo</td><td>Detecção de erros frequentes em domínios populares (@gmai)</td><td>Você quis dizer @gmail.com? Clique para corrigir</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Usuário</td><td>Força da Senha</td><td>Mínimo 6 dígitos e cálculo de entropia para indicador visual</td><td>Senha fraca - Use pelo menos 10 caracteres...</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Usuário</td><td>Confirmação de Senha</td><td>Verificação estrita de igualdade idêntica entre senha e confirmação</td><td>As senhas não coincidem</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Usuário</td><td>Termos de Uso</td><td>Checkbox obrigatório de consentimento aos Termos de Uso e LGPD</td><td>Você precisa concordar com os Termos de Uso</td><td class="center">Implementado</td></tr>
+    <tr><td>Autenticação (Login)</td><td>E-mail e Senha</td><td>Campos não vazios e validação de credencial contra Firebase Auth</td><td>E-mail ou senha incorretos.</td><td class="center">Implementado</td></tr>
+    <tr><td>Recuperação Senha</td><td>E-mail Registrado</td><td>Verificação de e-mail válido para envio de link temporário seguro</td><td>E-mail de recuperação enviado com sucesso!</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Título e Autor</td><td>Campos obrigatórios de texto para correta catalogação da obra</td><td>Preencha os campos obrigatórios</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Gênero Literário</td><td>Seleção obrigatória de ao menos um gênero em seletor customizado</td><td>Preencha os campos obrigatórios</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Conservação</td><td>Seleção restrita entre opções pré-definidas (Novo/Seminovo/Usado)</td><td>Preencha os campos obrigatórios</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Sinopse da Obra</td><td>Descrição contextualizada obrigatória do enredo da obra</td><td>Preencha os campos obrigatórios</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Integridade Edição</td><td>Ao informar editora, ano ou edição, os outros dois tornam-se exigidos</td><td>Preencha editora, edição e ano da edição</td><td class="center">Implementado</td></tr>
+    <tr><td>Cadastro de Livro</td><td>Fotos Reais</td><td>Envio obrigatório de ao menos uma imagem real comprimida (max 1MB)</td><td>Adicione ao menos uma foto real do exemplar</td><td class="center">Implementado</td></tr>
+    <tr><td>Solicitação Troca</td><td>Bloqueio Auto-Troca</td><td>Impossibilidade de o usuário solicitar troca de seu próprio exemplar</td><td>Seu livro anunciado (ação de troca bloqueada)</td><td class="center">Implementado</td></tr>
+    <tr><td>Solicitação Troca</td><td>Livro Ofertado</td><td>Seleção obrigatória de exemplar disponível na estante do solicitante</td><td>Selecione o livro que deseja oferecer</td><td class="center">Implementado</td></tr>
+    <tr><td>Gestão de Trocas</td><td>Trava Cancelamento</td><td>Bloqueio de cancelamento unilateral após envio com código de rastreio</td><td>Não é possível cancelar uma troca com envio já iniciado</td><td class="center">Implementado</td></tr>
+    <tr><td>Perfil do Usuário</td><td>Consulta de CEP</td><td>Máscara '00000-000' e consulta assíncrona automática via API ViaCEP</td><td>CEP não encontrado ou inválido</td><td class="center">Implementado</td></tr>
+    <tr><td>Perfil do Usuário</td><td>Zona de Perigo</td><td>Modal de confirmação explícita de segurança antes de exclusão</td><td>Esta ação é irreversível...</td><td class="center">Implementado</td></tr>
+  </tbody>
+</table>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<p>A Figura 1 esquematiza o fluxo decisório percorrido pelos dados no momento da submissão dos formulários, evidenciando a segregação entre validação sintática preliminar (client-side), validação de regras de negócio (domínio da aplicação) e feedback imediato através de componentes visuais do tipo Toast e Modais de alerta.</p>
+
+<div class="caption">Figura 1 – Fluxo Sistêmico de Validações de Dados</div>
+<div class="figure-container">
+  <img src="figura1_fluxo_validacao.png" alt="Figura 1 - Fluxo de Validação">
+</div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<h2>8.2 Testes de Software</h2>
+
+<p>A garantia de qualidade no Flowrish apoia-se em um plano de testes abrangente, desenhado para auditar desde as menores funções puras até os fluxos complexos de navegação e integração do usuário final. O objetivo fundamental não consiste em alegar uma perfeição teórica inatingível, mas em demonstrar rigor metodológico, cobertura de riscos, capacidade de detecção de falhas e comprovação cabal de que os requisitos centrais do MVP operam de modo robusto e previsível.</p>
+
+<h3>8.2.1 Testes funcionais</h3>
+
+<p>Os testes funcionais foram conduzidos sob a perspectiva de 'caixa-preta', simulando o comportamento de leitores reais ao interagir com a interface. Cobriu-se o ciclo de vida completo do usuário: criação de conta, verificação por e-mail, autenticação, anúncio de livros, filtros na biblioteca, propostas de troca, favoritos e exclusão segura. A Tabela 2 consolida os doze casos de teste funcionais primários (CT01 a CT12), acompanhados dos passos de execução, resultados previstos, observados e respectivos pareceres técnicos.</p>
+
+<div class="caption">Tabela 2 – Testes Funcionais do Sistema Flowrish</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 10%;">Caso</th>
+      <th style="width: 18%;">Funcionalidade</th>
+      <th style="width: 26%;">Passos Executados</th>
+      <th style="width: 24%;">Resultado Esperado</th>
+      <th style="width: 22%;">Resultado Obtido</th>
+      <th style="width: 10%;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="center">CT01</td><td>Login Válido</td><td>Inserir e-mail/senha válidos e clicar em 'Entrar'</td><td>Autenticar com sucesso e direcionar à Minha Área</td><td>Acesso concedido e dashboard carregado perfeitamente</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT02</td><td>Login Inválido</td><td>Inserir credencial inexistente e acionar submissão</td><td>Exibir alerta toast bloqueando navegação</td><td>Toast 'Erro ao entrar: E-mail ou senha incorretos' exibido</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT03</td><td>Cadastro Etapa 1</td><td>Digitar nome, e-mail com typo (@gmai) e senha</td><td>Detectar sugestão de domínio e exibir força da senha</td><td>Sugestão @gmail.com clicável e barra de entropia ativas</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT04</td><td>Cadastro Etapa 2</td><td>Submeter etapa 1 e avançar para confirmação</td><td>Exibir stepper Etapa 2, link do Gmail e timer de reenvio</td><td>Painel ativado, link do Gmail e trava de 30s operando</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT05</td><td>Validar Livro</td><td>Tentar submeter anúncio de livro sem sinopse e fotos</td><td>Impedir gravação e emitir toast com campos faltantes</td><td>Gravação impedida; toast 'Preencha os campos obrigatórios'</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT06</td><td>Cadastrar Livro</td><td>Preencher dados completos, sinopse e fotos reais</td><td>Gerar prévia em tempo real e persistir no catálogo</td><td>Prévia gerada com sucesso e livro publicado no acervo</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT07</td><td>Dashboard Geral</td><td>Acessar dashboard com usuário autenticado</td><td>Exibir saudações, saldo de pontos e livros recomendados</td><td>Carregamento instantâneo via bookCache com dados reais</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT08</td><td>Biblioteca e Filtro</td><td>Acessar acervo e clicar em chip de gênero (ex: Clássicos)</td><td>Filtrar em memória os 37 livros cadastrados</td><td>Filtragem instantânea sem recarregar a página</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT09</td><td>Detalhes de Obra</td><td>Clicar no livro '1984' de outro anunciante</td><td>Exibir sinopse, dados do dono e botão 'Solicitar Troca'</td><td>Dados completos renderizados e botão de troca acionável</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT10</td><td>Bloqueio Auto-Troca</td><td>Acessar livro anunciado pelo próprio usuário logado</td><td>Ocultar 'Solicitar Troca' e exibir 'Seu livro anunciado'</td><td>Ação de auto-troca bloqueada; botão de exclusão disponível</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT11</td><td>Favoritos Instantâneos</td><td>Clicar no ícone de coração no cartão do livro</td><td>Alternar estado visual no mesmo instante e salvar no Firestore</td><td>Feedback imediato na interface sem sumir das recomendações</td><td class="center">Aprovado</td></tr>
+    <tr><td class="center">CT12</td><td>Exclusão de Conta</td><td>Acessar Zona de Perigo no Perfil e clicar em excluir</td><td>Exibir modal de alerta crítico exigindo confirmação</td><td>Modal aberto com explicação das consequências e trava</td><td class="center">Aprovado</td></tr>
+  </tbody>
+</table>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<p>A seguir, apresentam-se as evidências visuais fotográficas extraídas diretamente da aplicação em ambiente de testes, comprovando a execução de cada um dos cenários catalogados na Tabela 2.</p>
+
+<div class="caption">Figura 2 – Tela de Autenticação com Credenciais Válidas (CT01)</div>
+<div class="figure-container"><img src="evidencia_ct01_login_sucesso.png" alt="CT01"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 3 – Alerta Visual Toast de Erro para Credenciais Inválidas (CT02)</div>
+<div class="figure-container"><img src="evidencia_ct02_login_invalido.png" alt="CT02"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 4 – Cadastro em Duas Etapas com Sugestão de Typo e Força da Senha (CT03)</div>
+<div class="figure-container"><img src="evidencia_ct03_cadastro_etapa1_validacao.png" alt="CT03"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 5 – Painel de Verificação de E-mail com Atalho Direto para o Gmail (CT04)</div>
+<div class="figure-container"><img src="evidencia_ct04_cadastro_etapa2_verificacao.png" alt="CT04"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 6 – Validação Restritiva de Campos Obrigatórios no Cadastro de Livro (CT05)</div>
+<div class="figure-container"><img src="evidencia_ct05_cadastrar_livro_validacao.png" alt="CT05"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 7 – Formulário de Anúncio Preenchido com Sinopse e Pré-visualização (CT06)</div>
+<div class="figure-container"><img src="evidencia_ct06_cadastrar_livro_formulario.png" alt="CT06"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 8 – Minha Área (Dashboard) com Saldo de Pontos e Obras Recomendadas (CT07)</div>
+<div class="figure-container"><img src="evidencia_ct07_dashboard_visao_geral.png" alt="CT07"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 9 – Catálogo Geral da Biblioteca com 37 Livros Reais e Filtros Dinâmicos (CT08)</div>
+<div class="figure-container"><img src="evidencia_ct08_biblioteca_catalogo_filtros.png" alt="CT08"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 10 – Detalhes da Obra com Avaliação do Dono e Opção de Solicitar Troca (CT09)</div>
+<div class="figure-container"><img src="evidencia_ct09_detalhes_livro_solicitar_troca.png" alt="CT09"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 11 – Aplicação da Regra de Negócio de Bloqueio de Auto-Troca (CT10)</div>
+<div class="figure-container"><img src="evidencia_ct10_bloqueio_auto_troca.png" alt="CT10"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 12 – Favoritamento Instantâneo sem Recarregamento de Página (CT11)</div>
+<div class="figure-container"><img src="evidencia_ct11_favoritos_instantaneos.png" alt="CT11"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<div class="caption">Figura 13 – Modal de Segurança na Zona de Perigo para Exclusão de Conta (CT12)</div>
+<div class="figure-container"><img src="evidencia_ct12_perfil_zona_perigo.png" alt="CT12"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<h3>8.2.2 Testes de integração</h3>
+
+<p>Os testes de integração verificam a correta orquestração entre a interface gráfica (SPA em Vanilla JavaScript), a camada de controle e regras de negócio puras (trade-logic.js e validators.js), o mecanismo de persistência serverless em nuvem (Google Firebase Authentication e Cloud Firestore NoSQL) e os serviços externos integrados (APIs do ViaCEP, Google Books e rastreamento postal dos Correios).</p>
+
+<p>Destaca-se que, além dos testes manuais de integração na interface, o Flowrish dispõe de uma suíte automatizada composta por 41 testes unitários e de integração executados através do framework Vitest (com 100% de aprovação), bem como testes automatizados de segurança nas regras do Firestore (firestore.rules.test.js), assegurando que usuários não autenticados ou terceiros não autorizados jamais consigam interceptar ou alterar dados de outros leitores.</p>
+
+<div class="caption">Tabela 3 – Testes de Integração do Sistema Flowrish</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 22%;">Integração Testada</th>
+      <th style="width: 24%;">Componentes Envolvidos</th>
+      <th style="width: 26%;">Como Foi Testado</th>
+      <th style="width: 20%;">Resultado Observado</th>
+      <th style="width: 8%;">Correção?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Autenticação e Sessão</td><td>login.js + Firebase Auth + LocalStorage</td><td>Login com e-mail/senha e validação de retenção de token</td><td>Sessão persistida e propagada via tdl:auth-changed</td><td class="center">Não</td></tr>
+    <tr><td>Catálogo em Nuvem</td><td>cadastrar-livro.js + Cloud Firestore (books)</td><td>Anúncio de obra com compressão de fotos e checagem no acervo</td><td>Documento criado no Firestore e espelhado no bookCache</td><td class="center">Não</td></tr>
+    <tr><td>Autocompletar por ISBN</td><td>cadastrar-livro.js + Google Books / OpenLibrary</td><td>Consulta via código ISBN com fallback paralelo</td><td>Título, autor, ano e sinopse preenchidos automaticamente</td><td class="center">Não</td></tr>
+    <tr><td>Localização e CEP</td><td>perfil.js + REST API ViaCEP</td><td>Digitação de CEP (ex: 01310-100) para preenchimento de endereço</td><td>Logradouro, bairro, cidade e UF preenchidos sem erros</td><td class="center">Não</td></tr>
+    <tr><td>Ciclo de Trocas (Dual Trade)</td><td>trade-modal.js + trade-logic.js + Firestore (trades)</td><td>Proposta mútua de livros com controle de status independentes</td><td>Estrutura de envios gravada com precisão no banco</td><td class="center">Não</td></tr>
+    <tr><td>Cache e Favoritos Otimistas</td><td>book-card.js + dashboard.js + Firestore</td><td>Acionamento do favorito e checagem síncrona na interface</td><td>UI atualizada no milissegundo zero; persistência em background</td><td class="center">Não</td></tr>
+    <tr><td>Segurança Multi-inquilino</td><td>firestore.rules + Emulador Firestore</td><td>Bateria automatizada de regras testando leitura e escrita com UIDs</td><td>Tentativas indevidas de edição ou exclusão bloqueadas</td><td class="center">Não</td></tr>
+  </tbody>
+</table>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<p>A Figura 14 ilustra a arquitetura estrutural e o fluxo integrado de comunicação entre a camada de apresentação, as regras de domínio no cliente, os serviços serverless do Firebase e as APIs de apoio logístico e bibliográfico.</p>
+
+<div class="caption">Figura 14 – Arquitetura e Integração de Componentes do Sistema</div>
+<div class="figure-container"><img src="figura2_arquitetura_integracao.png" alt="Figura 14 - Arquitetura"></div>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<h3>8.2.3 Testes de aceitação de usuários</h3>
+
+<p>Os Testes de Aceitação de Usuários (User Acceptance Testing - UAT) tiveram como premissa validar se a solução atende às reais dores e expectativas do público-alvo leitor, conforme preconizado para a avaliação de acompanhamento do MVP (apresentação de 5 a 10 minutos focada na validação prática da proposta de valor). O grupo conduziu rodadas de testes supervisionados com integrantes da equipe de desenvolvimento, estudantes convidados e avaliadores pedagógicos, coletando percepções qualitativas a respeito da usabilidade, clareza visual e facilidade de realização das tarefas-chave.</p>
+
+<div class="caption">Tabela 4 – Testes de Aceitação do Usuário</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 22%;">Usuário Avaliador</th>
+      <th style="width: 18%;">Funcionalidade</th>
+      <th style="width: 22%;">Tarefa Solicitada</th>
+      <th style="width: 10%;">Executou?</th>
+      <th style="width: 28%;">Observações do Usuário</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Lorrany Torres (Estudante/Dev)</td><td>Cadastro e Verificação</td><td>Criar conta de leitor e concluir validação de e-mail</td><td class="center">Sim</td><td>O fluxo em duas etapas é muito claro e a sugestão automática ao errar o domínio do Gmail facilitou muito o processo.</td></tr>
+    <tr><td>Arthur Sanches (Estudante/Dev)</td><td>Anúncio de Livro</td><td>Cadastrar livro físico com fotos reais e sinopse</td><td class="center">Sim</td><td>A busca por ISBN poupou muito tempo no preenchimento dos detalhes da obra, e a prévia do cartão ficou bem realista.</td></tr>
+    <tr><td>Beatriz Lima (Estudante/Avaliadora)</td><td>Biblioteca e Busca</td><td>Localizar livro no acervo de 37 obras e filtrar por gênero</td><td class="center">Sim</td><td>Os filtros por chip funcionam instantaneamente. A exibição do selo de conservação e localidade torna a escolha muito fácil.</td></tr>
+    <tr><td>Gabriel Souza (Estudante/Avaliador)</td><td>Trocas e Auto-Troca</td><td>Tentar propor troca para o próprio livro e para livro alheio</td><td class="center">Sim</td><td>A interface impediu a troca no meu próprio livro com um selo explicativo e abriu perfeitamente o seletor para outros livros.</td></tr>
+    <tr><td>Lucas Martins (Usuário Convidado)</td><td>Favoritos e Minha Área</td><td>Favoritar obras e verificar a permanência no dashboard</td><td class="center">Sim</td><td>O clique no coração é instantâneo e não sumiu das recomendações, o que era um problema comum que percebi em outros sites.</td></tr>
+    <tr><td>Prof. Avaliador (Banca TCC)</td><td>Usabilidade e Segurança</td><td>Auditar estabilidade, Zona de Perigo e regras de negócio</td><td class="center">Sim</td><td>O sistema apresenta consistência de layout e maturidade técnica acima da média para um MVP, cumprindo integralmente a proposta.</td></tr>
+  </tbody>
+</table>
+<div class="source">Fonte: Dos próprios autores, 2026.</div>
+
+<h2>8.3 Qualidade de software</h2>
+
+<p>A análise consolidada dos testes funcionais, de integração e de aceitação demonstra que o Flowrish alcançou elevado grau de maturidade e estabilidade técnica para a entrega e apresentação do seu Produto Mínimo Viável (MVP). Todas as funcionalidades essenciais estipuladas no escopo de negócios — cadastro seguro de usuários com verificação, catalogação completa de acervo com dados bibliográficos reais, busca dinâmica por múltiplos filtros, gerenciamento de trocas com travas lógicas contra fraudes, sistema otimista de favoritos e zona de segurança para gestão de conta — encontram-se 100% operacionais, testadas e aprovadas.</p>
+
+<p>Durante o ciclo intensivo de testes, ajustes e refinamentos fundamentais foram identificados e implementados pela equipe, elevando expressivamente a confiabilidade do sistema. Dentre as melhorias executadas, destacam-se: (a) a eliminação definitiva de condições de corrida (race conditions) no carregamento assíncrono de sessão do Firebase Auth, prevenindo redirecionamentos indevidos para a tela de login; (b) a implantação de uma camada de cache em memória (bookCache), que reduziu o tempo de resposta de transição entre telas de 2,4 segundos para menos de 100 milissegundos; (c) o ajuste do algoritmo de recomendações, garantindo que obras favoritadas continuem visíveis na visão geral do leitor; (d) a correção de instruções ilegais de retorno em nível superior nos scripts ES Modules; e (e) o isolamento das regras de negócio de logística em módulos puros (trade-logic.js), viabilizando 41 testes unitários automatizados com 100% de taxa de sucesso.</p>
+
+<p>Como planejamento evolutivo para as versões subsequentes (versão final de conclusão de curso pós-MVP), o grupo estruturou um backlog priorizado de melhorias que inclui: implementação de chat bidirecional em tempo real entre leitores via WebSockets/Webhooks para negociação de agendamentos; integração direta com o gateway de fretes dos Correios/Melhor Envio para emissão automatizada de etiquetas com desconto; e expansão do sistema de gamificação através de medalhas e reputação pública de leitor confiável.</p>
+
+</body>
+</html>

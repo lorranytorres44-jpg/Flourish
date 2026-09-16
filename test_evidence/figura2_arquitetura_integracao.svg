@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feOffset dx="0" dy="3" result="offset"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.12"/></feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2E4A35"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="640" fill="#FAF8F5" rx="12"/>
+  <rect x="40" y="20" width="920" height="48" fill="#2E4A35" rx="8" filter="url(#shadow)"/>
+  <text x="500" y="50" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="17" font-weight="bold" text-anchor="middle">
+    ARQUITETURA E INTEGRAÇÃO DE COMPONENTES — FLOWRISH MVP
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="85" width="920" height="135" fill="#FFFFFF" stroke="#4A7C59" stroke-width="1.5" rx="8"/>
+    <rect x="40" y="85" width="920" height="28" fill="#E8F1EA" rx="8 8 0 0"/>
+    <text x="55" y="104" fill="#2E4A35" font-family="Arial, sans-serif" font-size="12" font-weight="bold">CAMADA DE APRESENTAÇÃO — SINGLE PAGE / WEB INTERFACE (HTML5 + CSS3 + ES MODULES)</text>
+    <rect x="60" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="125" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">login / cadastro</text>
+    <text x="125" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Autenticação 2-etapas</text>
+    <text x="125" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">e Typo Correction</text>
+    <rect x="210" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="275" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">dashboard</text>
+    <text x="275" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Métricas, Favoritos,</text>
+    <text x="275" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Recomendações</text>
+    <rect x="360" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="425" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">biblioteca</text>
+    <text x="425" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Filtros Dinâmicos</text>
+    <text x="425" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">por Gênero/Estado</text>
+    <rect x="510" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="575" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">cadastrar-livro</text>
+    <text x="575" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Sinopse, Fotos,</text>
+    <text x="575" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Busca ISBN / CEP</text>
+    <rect x="660" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="725" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">livro / trocas</text>
+    <text x="725" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Proposta de Troca</text>
+    <text x="725" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">e Bloqueio Auto-Troca</text>
+    <rect x="810" y="125" width="130" height="75" fill="#F9FBFA" stroke="#C5DBC8" rx="6"/>
+    <text x="875" y="152" fill="#2E4A35" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">perfil / conta</text>
+    <text x="875" y="172" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Dados do Usuário</text>
+    <text x="875" y="187" fill="#666" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">e Zona de Perigo</text>
+  </g>
+
+  <line x1="500" y1="220" x2="500" y2="255" stroke="#2E4A35" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="260" width="920" height="120" fill="#FFFFFF" stroke="#4A7C59" stroke-width="1.5" rx="8"/>
+    <rect x="40" y="260" width="920" height="28" fill="#E8F1EA" rx="8 8 0 0"/>
+    <text x="55" y="279" fill="#2E4A35" font-family="Arial, sans-serif" font-size="12" font-weight="bold">CAMADA LÓGICA DO CLIENTE — REGRAS DE NEGÓCIO, VALIDADORES E CACHE LOCAL</text>
+    <rect x="70" y="300" width="250" height="65" fill="#F4F8F4" stroke="#8CBF95" rx="6"/>
+    <text x="195" y="325" fill="#2E4A35" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">validators.js &amp; auth.js</text>
+    <text x="195" y="345" fill="#555" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">E-mail, Typo Suggestion, Força de Senha</text>
+    <rect x="375" y="300" width="250" height="65" fill="#F4F8F4" stroke="#8CBF95" rx="6"/>
+    <text x="500" y="325" fill="#2E4A35" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">trade-logic.js</text>
+    <text x="500" y="345" fill="#555" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Regras Puras, Bloqueio Auto-Troca, Trava Cancelamento</text>
+    <rect x="680" y="300" width="250" height="65" fill="#F4F8F4" stroke="#8CBF95" rx="6"/>
+    <text x="805" y="325" fill="#2E4A35" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">storage.js &amp; bookCache</text>
+    <text x="805" y="345" fill="#555" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Atualização Otimista e Cache em Memória</text>
+  </g>
+
+  <line x1="300" y1="380" x2="300" y2="425" stroke="#2E4A35" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="700" y1="380" x2="700" y2="425" stroke="#2E4A35" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="430" width="530" height="175" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" rx="8"/>
+    <rect x="40" y="430" width="530" height="28" fill="#FEF3C7" rx="8 8 0 0"/>
+    <text x="55" y="449" fill="#92400E" font-family="Arial, sans-serif" font-size="12" font-weight="bold">BACKEND SERVERLESS — GOOGLE FIREBASE</text>
+    <rect x="65" y="475" width="230" height="50" fill="#FFFBEB" stroke="#FCD34D" rx="6"/>
+    <text x="180" y="497" fill="#78350F" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Firebase Authentication</text>
+    <text x="180" y="513" fill="#92400E" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Login E-mail/Senha + Google OAuth</text>
+    <rect x="315" y="475" width="230" height="50" fill="#FFFBEB" stroke="#FCD34D" rx="6"/>
+    <text x="430" y="497" fill="#78350F" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Cloud Firestore (NoSQL)</text>
+    <text x="430" y="513" fill="#92400E" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">users, books, trades, ratings</text>
+    <rect x="65" y="535" width="480" height="50" fill="#FFFBEB" stroke="#FCD34D" rx="6"/>
+    <text x="305" y="557" fill="#78350F" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Firestore Security Rules (firestore.rules)</text>
+    <text x="305" y="573" fill="#92400E" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Isolamento multi-inquilino e integridade de dados por UID</text>
+    <rect x="600" y="430" width="360" height="175" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.5" rx="8"/>
+    <rect x="600" y="430" width="360" height="28" fill="#DBEAFE" rx="8 8 0 0"/>
+    <text x="615" y="449" fill="#1E40AF" font-family="Arial, sans-serif" font-size="12" font-weight="bold">SERVIÇOS E APIS EXTERNAS</text>
+    <rect x="620" y="475" width="320" height="35" fill="#EFF6FF" stroke="#BFDBFE" rx="6"/>
+    <text x="780" y="497" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">ViaCEP REST API (Autocompletar Endereço)</text>
+    <rect x="620" y="518" width="320" height="35" fill="#EFF6FF" stroke="#BFDBFE" rx="6"/>
+    <text x="780" y="540" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Google Books API / Open Library (Busca ISBN)</text>
+    <rect x="620" y="560" width="320" height="35" fill="#EFF6FF" stroke="#BFDBFE" rx="6"/>
+    <text x="780" y="582" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Módulo Rastreio Correios (Validação Logística)</text>
+  </g>
+</svg>
