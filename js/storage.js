@@ -773,10 +773,6 @@ export function unreadCount() {
   return cachedNotifications.filter(n => !n.lida).length;
 }
 
-// -------- Tema (padrão único: tema claro) --------
-export function getTheme() {
-  return 'light';
-}
-export function setTheme(theme) {
-  localStorage.setItem('tdl_theme', 'light');
-}
+// -------- Tema (Claro / Escuro) --------
+export { getTheme, setTheme, toggleTheme } from './theme.js';
+

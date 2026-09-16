@@ -793,10 +793,14 @@ window.addEventListener('tdl:notification', renderNotifDash);
 // ---------- Configurações ----------
 const darkToggle = document.getElementById('darkModeToggle');
 if (darkToggle) {
-  darkToggle.checked = false;
+  darkToggle.checked = getTheme() === 'dark';
   darkToggle.addEventListener('change', () => {
-    document.documentElement.setAttribute('data-theme', 'light');
-    setTheme('light');
+    setTheme(darkToggle.checked ? 'dark' : 'light');
+  });
+  window.addEventListener('tdl:theme-changed', (e) => {
+    if (e.detail?.theme) {
+      darkToggle.checked = e.detail.theme === 'dark';
+    }
   });
 }
 document.getElementById('logoutBtnDash').addEventListener('click', async () => {

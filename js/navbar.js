@@ -1,5 +1,6 @@
 import { getSession, logout, getPoints, getNotifications, unreadCount, markNotificationsRead, isLoggedIn } from './storage.js';
 import { openModal } from './modal.js';
+import { getTheme, toggleTheme } from './theme.js';
 
 const NAV_LINKS = [
   { href: 'index.html', label: 'Início' },
@@ -17,6 +18,12 @@ function timeAgo(iso) {
 }
 
 let currentActiveNavPage = '';
+
+function getThemeIconSVG(theme) {
+  return theme === 'dark'
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+}
 
 export function renderNavbar(activePage = '') {
   if (activePage) currentActiveNavPage = activePage;
@@ -56,6 +63,13 @@ export function renderNavbar(activePage = '') {
       <a href="cadastro.html" class="btn btn-primary btn-sm">Cadastrar</a>
     `;
 
+  const curTheme = getTheme();
+  const themeBtnHTML = `
+    <button class="btn-icon theme-toggle-btn" id="navThemeToggleBtn" aria-label="Alternar tema claro/escuro" title="Alternar modo escuro/claro">
+      ${getThemeIconSVG(curTheme)}
+    </button>
+  `;
+
   root.innerHTML = `
     <header class="navbar">
       <div class="navbar-inner">
@@ -73,6 +87,7 @@ export function renderNavbar(activePage = '') {
           <input type="search" id="navSearchInput" placeholder="Buscar livros, autores..." aria-label="Buscar livros">
         </form>
         <div class="nav-actions">
+          ${themeBtnHTML}
           ${authArea}
           <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -92,10 +107,38 @@ export function renderNavbar(activePage = '') {
         </form>
         ${NAV_LINKS.map(l => `<a href="${l.href}">${l.label}</a>`).join('')}
         <div class="dropdown-divider"></div>
+        <button class="btn-icon" id="mobileThemeToggle" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:var(--text);font-size:0.95rem;cursor:pointer;border-radius:var(--radius-pill);">
+          ${getThemeIconSVG(curTheme)}
+          <span id="mobileThemeText">${curTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+        </button>
+        <div class="dropdown-divider"></div>
         ${session ? `<a href="perfil.html">Meu Perfil</a><button id="mobileLogout">Sair</button>` : `<a href="login.html">Entrar</a><a href="cadastro.html">Cadastrar</a>`}
       </div>
     </div>
   `;
+
+  const handleThemeToggle = () => {
+    const newTheme = toggleTheme();
+    updateThemeButtons(newTheme);
+  };
+
+  function updateThemeButtons(theme) {
+    const navBtn = document.getElementById('navThemeToggleBtn');
+    if (navBtn) navBtn.innerHTML = getThemeIconSVG(theme);
+    const mobBtn = document.getElementById('mobileThemeToggle');
+    if (mobBtn) {
+      mobBtn.innerHTML = `
+        ${getThemeIconSVG(theme)}
+        <span id="mobileThemeText">${theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+      `;
+    }
+  }
+
+  document.getElementById('navThemeToggleBtn')?.addEventListener('click', handleThemeToggle);
+  document.getElementById('mobileThemeToggle')?.addEventListener('click', handleThemeToggle);
+  window.addEventListener('tdl:theme-changed', (e) => {
+    if (e.detail?.theme) updateThemeButtons(e.detail.theme);
+  });
 
   const navToggle = document.getElementById('navToggle');
   const drawer = document.getElementById('mobileDrawer');
