@@ -40,11 +40,14 @@ document.getElementById('userFirstName').textContent = (session.nome || 'leitor(
 
 // ---------- Navegação de seções ----------
 document.querySelectorAll('.dash-sidebar button').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     document.querySelectorAll('.dash-sidebar button').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`section-${btn.dataset.section}`).classList.add('active');
+    if (btn.dataset.section === 'favoritos') {
+      await renderFavoritesDash();
+    }
   });
 });
 
@@ -71,10 +74,11 @@ async function getRecommendations() {
   const tradeBooks = (await Promise.all(trades.map(t => getAnyBookById(t.bookId)))).filter(Boolean);
   tradeBooks.forEach(b => bookGeneros(b).forEach(g => generos.add(g)));
 
-  const owned = new Set([...getFavorites(), ...getReadList(), ...myBooks.map(b => b.id)]);
+  // Exclui apenas os livros do próprio usuário logado; favoritos CONTINUAM visíveis nas recomendações!
+  const myBookIds = new Set(myBooks.map(b => b.id));
   const allBooks = await getAllBooks();
-  let recs = allBooks.filter(b => bookGeneros(b).some(g => generos.has(g)) && !owned.has(b.id));
-  if (recs.length < 4) recs = [...recs, ...allBooks.filter(b => !owned.has(b.id) && !recs.includes(b))];
+  let recs = allBooks.filter(b => bookGeneros(b).some(g => generos.has(g)) && !myBookIds.has(b.id));
+  if (recs.length < 4) recs = [...recs, ...allBooks.filter(b => !myBookIds.has(b.id) && !recs.includes(b))];
   return recs.slice(0, 4);
 }
 await renderBookGrid(document.getElementById('gridRecomendados'), await getRecommendations(), 'Favorite livros para receber recomendações personalizadas.');
@@ -753,8 +757,17 @@ window.addEventListener('tdl:book-deleted', async () => {
 });
 
 // ---------- Favoritos ----------
-const favBooksDash = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
-await renderBookGrid(document.getElementById('gridFavoritosDash'), favBooksDash, 'Você ainda não favoritou nenhum livro.');
+async function renderFavoritesDash() {
+  const favIds = getFavorites();
+  const favBooks = (await Promise.all(favIds.map(getAnyBookById))).filter(Boolean);
+  await renderBookGrid(document.getElementById('gridFavoritosDash'), favBooks, 'Você ainda não favoritou nenhum livro.');
+}
+await renderFavoritesDash();
+
+window.addEventListener('tdl:favorite-changed', async () => {
+  await renderFavoritesDash();
+  await renderOverview();
+});
 
 // ---------- Pontos ----------
 document.getElementById('pontosSaldo').textContent = `${getPoints() ?? 0} pontos`;

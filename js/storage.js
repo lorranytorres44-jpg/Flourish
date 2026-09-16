@@ -289,65 +289,96 @@ export const PONTOS_REGRAS = {
 export function getFavorites() { return [...cachedFavorites]; }
 export function isFavorite(bookId) { return cachedFavorites.has(bookId); }
 export async function toggleFavorite(bookId) {
-  if (!cachedUser) return;
-  const ref = doc(db, 'users', cachedUser.uid, 'favorites', bookId);
+  const user = cachedUser || auth.currentUser;
+  if (!user) return;
+  const isFav = cachedFavorites.has(bookId);
+  const ref = doc(db, 'users', user.uid, 'favorites', bookId);
   const bookRef = doc(db, 'books', bookId);
-  if (cachedFavorites.has(bookId)) {
-    await deleteDoc(ref);
+
+  // 1. Atualização otimista imediata na memória para feedback instantâneo
+  if (isFav) {
     cachedFavorites.delete(bookId);
-    await updateDoc(bookRef, { curtidas: increment(-1) }).catch(() => {});
   } else {
-    await setDoc(ref, { addedAt: serverTimestamp() });
     cachedFavorites.add(bookId);
-    await updateDoc(bookRef, { curtidas: increment(1) }).catch(() => {});
+  }
+  window.dispatchEvent(new CustomEvent('tdl:favorite-changed', { detail: { bookId, isFav: !isFav } }));
+
+  // 2. Persistência assíncrona no Firestore em segundo plano
+  try {
+    if (isFav) {
+      await deleteDoc(ref);
+      await updateDoc(bookRef, { curtidas: increment(-1) }).catch(() => {});
+    } else {
+      await setDoc(ref, { addedAt: serverTimestamp() });
+      await updateDoc(bookRef, { curtidas: increment(1) }).catch(() => {});
+    }
+  } catch (err) {
+    console.error('Erro ao sincronizar favorito:', err);
+    // Reverte em caso de falha
+    if (isFav) cachedFavorites.add(bookId);
+    else cachedFavorites.delete(bookId);
+    window.dispatchEvent(new CustomEvent('tdl:favorite-changed', { detail: { bookId, isFav } }));
   }
 }
 
 export function getReadList() { return [...cachedReadList]; }
 export function isRead(bookId) { return cachedReadList.has(bookId); }
 export async function toggleRead(bookId) {
-  if (!cachedUser) return;
-  const ref = doc(db, 'users', cachedUser.uid, 'readList', bookId);
+  const user = cachedUser || auth.currentUser;
+  if (!user) return;
+  const ref = doc(db, 'users', user.uid, 'readList', bookId);
   if (cachedReadList.has(bookId)) { await deleteDoc(ref); cachedReadList.delete(bookId); }
   else { await setDoc(ref, { addedAt: serverTimestamp() }); cachedReadList.add(bookId); }
 }
 
-// -------- Livros --------
+// -------- Livros & Cache em Memória --------
+const bookCache = new Map();
+
 export async function getFirestoreBooks() {
   const qs = await getDocs(collection(db, 'books'));
-  return qs.docs
+  const books = qs.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(b => b.disponivel !== false && b.status !== 'trocado');
+  books.forEach(b => bookCache.set(b.id, b));
+  return books;
 }
 
 export async function getMyBooks() {
-  if (!cachedUser) return [];
-  const q = query(collection(db, 'books'), where('ownerId', '==', cachedUser.uid));
+  const user = cachedUser || auth.currentUser;
+  if (!user) return [];
+  const q = query(collection(db, 'books'), where('ownerId', '==', user.uid));
   const qs = await getDocs(q);
-  return qs.docs
+  const myBooks = qs.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(b => b.disponivel !== false && b.status !== 'trocado');
+  myBooks.forEach(b => bookCache.set(b.id, b));
+  return myBooks;
 }
 
 export async function deleteBook(bookId) {
-  if (!cachedUser) throw new Error('Usuário não autenticado.');
+  const user = cachedUser || auth.currentUser;
+  if (!user) throw new Error('Usuário não autenticado.');
   const book = await getAnyBookById(bookId);
   if (!book) throw new Error('Livro não encontrado.');
-  if (book.ownerId !== cachedUser.uid) {
+  if (book.ownerId !== user.uid) {
     throw new Error('Você só pode excluir livros anunciados por você.');
   }
   await deleteDoc(doc(db, 'books', bookId));
+  bookCache.delete(bookId);
   window.dispatchEvent(new CustomEvent('tdl:book-deleted', { detail: { bookId } }));
   return true;
 }
 
 export async function addMyBook(book) {
+  const user = cachedUser || auth.currentUser;
   const docRef = await addDoc(collection(db, 'books'), {
-    ...book, ownerId: cachedUser.uid, curtidas: 0,
+    ...book, ownerId: user.uid, curtidas: 0,
     dataCadastro: new Date().toISOString().slice(0, 10),
   });
+  const newBook = { id: docRef.id, ...book, ownerId: user.uid };
+  bookCache.set(docRef.id, newBook);
   await addPoints(PONTOS_REGRAS.ENVIAR_LIVRO, 'livro anunciado');
-  return { id: docRef.id, ...book, ownerId: cachedUser.uid };
+  return newBook;
 }
 
 export async function getAllBooks() {
@@ -364,8 +395,12 @@ export async function getMostLikedBooks(max = 5) {
 }
 
 export async function getAnyBookById(id) {
+  if (!id) return null;
+  if (bookCache.has(id)) return bookCache.get(id);
   const snap = await getDoc(doc(db, 'books', id));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  if (data) bookCache.set(id, data);
+  return data;
 }
 
 // Resolve os dados de exibição do dono de um livro. Prioriza o cache da
