@@ -34,7 +34,9 @@ if (!book) {
 } else {
   const owner = await getOwnerInfo(book.ownerId);
   document.title = `${book.titulo} — Flowrish`;
-  const fotos = book.fotos?.length ? book.fotos : [book.capa];
+  const capaValida = (book.capa && (book.capa.startsWith('http') || book.capa.startsWith('data:') || book.capa.startsWith('assets/'))) ? book.capa : 'assets/sem-capa.svg';
+  const fotosRaw = book.fotos?.length ? book.fotos : [capaValida];
+  const fotos = fotosRaw.map(f => (f && (f.startsWith('http') || f.startsWith('data:') || f.startsWith('assets/'))) ? f : 'assets/sem-capa.svg');
 
   // A troca é combinada pelo WhatsApp do anunciante (só quem está logado vê o número).
   const telefoneDono = meuAnuncio ? '' : await getOwnerTelefone(book.ownerId).catch(() => '');
@@ -52,7 +54,7 @@ if (!book) {
     <div class="bk-top">
       <div class="bk-gallery">
         <div class="bk-cover">
-          <img id="galleryMain" src="${fotos[0]}" alt="Foto de capa de ${book.titulo}" onerror="this.src='https://placehold.co/345x600/C8EAFB/4B4C33?text=Sem+capa'">
+          <img id="galleryMain" src="${fotos[0]}" alt="Foto de capa de ${book.titulo}" onerror="this.src='assets/sem-capa.svg'">
           ${meuAnuncio ? '' : `<button type="button" class="bk-fav" id="favBtn">
             <svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART_PATH}"/></svg>
           </button>`}
@@ -175,7 +177,7 @@ if (!book) {
       .map(b => `
         <li>
           <a class="proposta-livro" href="${linkProposta(b)}" target="_blank" rel="noopener" data-proposta>
-            <img src="${escapeHTML(b.capa)}" alt="" onerror="this.src='https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'">
+            <img src="${escapeHTML(b.capa)}" alt="" onerror="this.src='assets/sem-capa.svg'">
             <span><strong>${escapeHTML(b.titulo)}</strong>${b.autor ? `<small>${escapeHTML(b.autor)}</small>` : ''}</span>
           </a>
         </li>`).join('');

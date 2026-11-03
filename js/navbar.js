@@ -1,5 +1,6 @@
 import { getSession, logout } from './storage.js';
 import { openModal } from './modal.js';
+import { getTheme, toggleTheme } from './theme.js';
 
 const NAV_LINKS = [
   { href: 'index.html', label: 'Início' },
@@ -9,12 +10,19 @@ const NAV_LINKS = [
   { href: 'acervo.html', label: 'Meu acervo', requiresLogin: true },
 ];
 
+function getThemeIconSVG(theme) {
+  return theme === 'dark'
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+}
+
 // Logo: o "o" de Flowrish vira uma flor.
 const FLOWER_LOGO = `Fl<img class="logo-flower" src="assets/flor-logo.svg" alt="">wrish`;
 
 // Barra do topo de todas as páginas: busca à esquerda, sem "Início" (o logo
 // leva à home), rótulos curtos e logo com flor.
 export function renderNavbar(activePage = '') {
+  initTheme();
   const root = document.getElementById('navbar-root');
   if (!root) return;
   const session = getSession();
@@ -45,6 +53,13 @@ export function renderNavbar(activePage = '') {
     // Sem login: só "Entrar" (o cadastro fica acessível pela tela de login).
     : `<a href="login.html" class="btn btn-sm nav-login">Entrar</a>`;
 
+  const curTheme = getTheme();
+  const themeBtnHTML = `
+    <button class="btn-icon theme-toggle-btn" id="navThemeToggleBtn" aria-label="Alternar modo claro/escuro" title="Alternar modo claro/escuro">
+      ${getThemeIconSVG(curTheme)}
+    </button>
+  `;
+
   root.innerHTML = `
     <header class="navbar navbar--home">
       <div class="navbar-inner">
@@ -59,6 +74,7 @@ export function renderNavbar(activePage = '') {
           <input type="search" id="navSearchInput" autocomplete="off" placeholder="Autor ou livro" aria-label="Buscar livros">
         </form>
         <div class="nav-actions">
+          ${themeBtnHTML}
           ${authArea}
           <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -77,11 +93,38 @@ export function renderNavbar(activePage = '') {
           <input type="search" id="mobileSearchInput" placeholder="Buscar livros, autores..." aria-label="Buscar livros">
         </form>
         ${visibleLinks.map(l => `<a href="${l.href}"${lockAttrs(l)}>${l.label}</a>`).join('')}
+        <button class="btn btn-secondary btn-sm" id="mobileThemeToggle" style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+          ${getThemeIconSVG(curTheme)}
+          <span id="mobileThemeText">${curTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+        </button>
         <div class="dropdown-divider"></div>
         ${session ? `<a href="perfil.html">Meu Perfil</a><button id="mobileLogout">Sair</button>` : `<a href="login.html">Entrar</a><a href="cadastro.html">Cadastrar</a>`}
       </div>
     </div>
   `;
+
+  const handleThemeToggle = () => {
+    const newTheme = toggleTheme();
+    updateThemeButtons(newTheme);
+  };
+
+  function updateThemeButtons(theme) {
+    const navBtn = document.getElementById('navThemeToggleBtn');
+    if (navBtn) navBtn.innerHTML = getThemeIconSVG(theme);
+    const mobBtn = document.getElementById('mobileThemeToggle');
+    if (mobBtn) {
+      mobBtn.innerHTML = `
+        ${getThemeIconSVG(theme)}
+        <span id="mobileThemeText">${theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+      `;
+    }
+  }
+
+  document.getElementById('navThemeToggleBtn')?.addEventListener('click', handleThemeToggle);
+  document.getElementById('mobileThemeToggle')?.addEventListener('click', handleThemeToggle);
+  window.addEventListener('tdl:theme-changed', (e) => {
+    if (e.detail?.theme) updateThemeButtons(e.detail.theme);
+  });
 
   const navToggle = document.getElementById('navToggle');
   const drawer = document.getElementById('mobileDrawer');

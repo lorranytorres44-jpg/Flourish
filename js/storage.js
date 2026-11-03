@@ -255,12 +255,18 @@ export async function getAllBooks() {
 }
 
 // Livros ordenados por curtidas — usado na home.
+// Adaptação para dados reais: se houver poucos livros com curtidas, completa
+// com os livros mais recentes cadastrados, garantindo que a vitrine nunca fique vazia.
 export async function getMostLikedBooks(max = 5) {
   const books = await getFirestoreBooks();
-  return books
+  const liked = books
     .filter(b => (b.curtidas || 0) > 0)
-    .sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0))
-    .slice(0, max);
+    .sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
+  if (liked.length >= 3) return liked.slice(0, max);
+  const remaining = books
+    .filter(b => !liked.some(l => l.id === b.id))
+    .sort((a, b) => new Date(b.dataCadastro || 0) - new Date(a.dataCadastro || 0));
+  return [...liked, ...remaining].slice(0, max);
 }
 
 export async function getAnyBookById(id) {

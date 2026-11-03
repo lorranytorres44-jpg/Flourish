@@ -22,17 +22,20 @@
 .bk-review-resposta strong { display: block; font-size: 0.9rem; }
 .bk-review-resposta p { margin: 4px 0 0; font-size: 0.95rem; color: #F6EED9; overflow-wrap: anywhere; }
 .bk-responder {
-  margin: 10px 0 0 8px; padding: 4px 16px; border: none; border-radius: 999px;
-  background: #C97B96; color: #F6EED9; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+  margin: 10px 0 0 8px; padding: 6px 20px; border: none; border-radius: 9999px;
+  background: var(--primary); color: #FFFFFF; font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  box-shadow: var(--shadow-3d-btn-primary); transition: all 0.2s ease;
 }
-.bk-responder:hover { background: #B96A86; }
+.bk-responder:hover { background: var(--primary-hover); transform: translateY(-2px); }
+.bk-responder:active { transform: translateY(1px) scale(0.98); }
 .bk-responder:disabled { opacity: 0.6; cursor: wait; }
 .bk-resposta-form { margin: 12px 0 0 8px; }
 .bk-resposta-form textarea {
-  display: block; width: 100%; padding: 10px 16px; border: none; border-radius: 18px; resize: vertical;
-  background: #D8D4B6; color: #4B4C33; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; line-height: 1.45;
+  display: block; width: 100%; padding: 12px 18px; border: 1.5px solid var(--border); border-radius: 18px; resize: vertical;
+  background: var(--surface-card); color: var(--text); font-family: var(--font-body); font-size: 0.95rem; line-height: 1.45;
+  box-shadow: var(--shadow-clay-input);
 }
-.bk-resposta-form textarea:focus { outline: 2px solid #E3B9BC; outline-offset: 2px; }
+.bk-resposta-form textarea:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
 .bk-resposta-acoes { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
 .bk-resposta-acoes .bk-responder { margin-left: 0; }
 .bk-resposta-cancelar { margin-top: 10px; padding: 0; border: none; background: none; color: #F6EED9; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.88rem; text-decoration: underline; cursor: pointer; }

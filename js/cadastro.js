@@ -2,7 +2,9 @@ import { signUpWithEmail, isLoggedIn, authReady } from './storage.js';
 import { showToast } from './toast.js';
 import { bindPasswordStrength, isStrongPassword } from './auth.js';
 import { maskTelefone, isValidTelefone } from './validators.js';
+import { initTheme } from './theme.js';
 
+initTheme();
 await authReady;
 if (isLoggedIn()) window.location.href = 'perfil.html';
 

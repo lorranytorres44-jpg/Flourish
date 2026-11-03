@@ -1,7 +1,13 @@
 {
   "name": "flowrish",
+  "version": "1.2.0",
   "private": true,
-  "description": "Flowrish — troca de livros (site estático + Firebase)",
+  "description": "Flowrish — Biblioteca digital e plataforma de troca de livros físicos entre leitores",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nepotira/Flourish.git"
+  },
   "type": "module",
   "scripts": {
     "test": "vitest run tests/unit",

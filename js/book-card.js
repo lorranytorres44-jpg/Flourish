@@ -8,10 +8,15 @@ export function bookCardHTML(book, owner) {
   // O próprio anúncio não pode ser curtido; ao clicar, abre a página do livro
   // na versão do dono (a mesma do "Meu acervo", com editar e excluir).
   const meu = book.ownerId === getSession()?.id;
+  const capaUrl = (book.capa && (book.capa.startsWith('http') || book.capa.startsWith('data:') || book.capa.startsWith('assets/')))
+    ? book.capa
+    : 'assets/sem-capa.svg';
+  const ownerFoto = owner.foto || 'assets/default-avatar.svg';
+
   return `
     <article class="card book-card reveal" data-book-id="${book.id}" tabindex="0" role="link" aria-label="${meu ? 'Ver seu anúncio' : 'Ver detalhes de'} ${book.titulo}">
       <div class="book-cover">
-        <img src="${book.capa}" alt="Capa do livro ${book.titulo}" loading="lazy" onerror="this.src='https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'">
+        <img src="${capaUrl}" alt="Capa do livro ${book.titulo}" loading="lazy" onerror="this.src='assets/sem-capa.svg'">
         ${meu ? '' : `<button class="fav-btn ${fav ? 'active' : ''}" data-fav-btn aria-label="Favoritar ${book.titulo}" aria-pressed="${fav}">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="${fav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.7 1.2 6 3.5C14.3 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg>
         </button>`}
@@ -21,12 +26,12 @@ export function bookCardHTML(book, owner) {
         <h3 class="book-title">${book.titulo}</h3>
         <p class="book-author">${book.autor}</p>
         <div class="book-meta">
-          ${book.generos.map(g => `<span class="badge badge-brown">${g}</span>`).join('')}
-          <span class="badge badge-terracotta">${book.nacionalidade}</span>
+          ${(book.generos || []).map(g => `<span class="badge badge-brown">${g}</span>`).join('')}
+          <span class="badge badge-terracotta">${book.nacionalidade || 'Nacional'}</span>
         </div>
         <p class="book-interest">${PIN_ICON} ${owner.cidade || '—'}</p>
         <a class="book-owner-row" href="anunciante.html?id=${encodeURIComponent(book.ownerId)}" data-owner-link aria-label="Ver o perfil de ${owner.nome}">
-          <img src="${owner.foto}" alt="" loading="lazy">
+          <img src="${ownerFoto}" alt="" loading="lazy">
           <span>${owner.nome}</span>
         </a>
       </div>
