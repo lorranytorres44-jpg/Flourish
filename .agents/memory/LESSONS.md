@@ -11,3 +11,7 @@
 
 3. **Arquitetura sem Build Pesado**:
    - O projeto utiliza ES Modules nativos no navegador (`<script type="module">`). Dependências de teste (Vitest) rodam via Node.js local, mas o runtime web não depende de bundler (Webpack/Vite) para servir páginas, garantindo leveza e carregamento direto no localhost.
+
+4. **Padrão Completo para Repositório Público (Regra de Excelência)**:
+   - Nenhum repositório público pode ficar sem os artefatos fundamentais de governança: `README.md` visual e detalhado, `LICENSE` oficial com copyright, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md`, `THIRD_PARTY_LICENSES.md`, `AGENTS.md` e templates de Issue/PR em `.github/`.
+   - Entregas de versão SemVer exigem tag anotada e publicação formal de Release no GitHub via `gh release create` contendo notas de release derivadas do `CHANGELOG.md`.
