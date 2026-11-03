@@ -3,6 +3,9 @@ import { showToast } from './toast.js';
 import { bookGeneros } from './data.js';
 
 export function starsHTML(rating) {
+  if (rating === null || rating === undefined || isNaN(rating)) {
+    return '<span class="stars-empty" style="font-size:0.8rem;opacity:0.85;">Novo leitor</span>';
+  }
   const full = Math.round(rating);
   return '★'.repeat(full) + '☆'.repeat(5 - full);
 }
@@ -12,10 +15,13 @@ export const PIN_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="n
 export function bookCardHTML(book, owner, options = {}) {
   const fav = isFavorite(book.id);
   const showDelete = options.showDelete;
+  const ownerData = owner || { nome: 'Anunciante', foto: 'assets/default-avatar.svg', avaliacaoMedia: null, cidade: '' };
+  const capaUrl = (book.capa && (book.capa.startsWith('http') || book.capa.startsWith('data:') || book.capa.startsWith('assets/'))) ? book.capa : 'assets/sem-capa.svg';
+
   return `
     <article class="card book-card reveal" data-book-id="${book.id}" tabindex="0" role="link" aria-label="Ver detalhes de ${book.titulo}" style="position:relative;">
       <div class="book-cover">
-        <img src="${book.capa}" alt="Capa do livro ${book.titulo}" loading="lazy" onerror="this.src='https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'">
+        <img src="${capaUrl}" alt="Capa do livro ${book.titulo}" loading="lazy" onerror="this.src='assets/sem-capa.svg'">
         ${showDelete ? `
           <button type="button" class="btn-delete-card" data-delete-book="${book.id}" data-book-title="${book.titulo}" title="Excluir livro anunciado" aria-label="Excluir livro anunciado" style="position:absolute;top:8px;left:8px;z-index:4;background:rgba(255,255,255,0.95);border:1px solid var(--danger);color:var(--danger);border-radius:16px;padding:4px 8px;font-size:0.75rem;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
             🗑️ Excluir
@@ -34,11 +40,11 @@ export function bookCardHTML(book, owner, options = {}) {
           ${bookGeneros(book).map(g => `<span class="badge badge-brown">${g}</span>`).join('')}
           <span class="badge badge-terracotta">${book.nacionalidade}</span>
         </div>
-        <p class="book-interest">${PIN_ICON} ${owner.cidade || '—'}</p>
+        <p class="book-interest">${PIN_ICON} ${ownerData.cidade || '—'}</p>
         <div class="book-owner-row">
-          <img src="${owner.foto}" alt="" loading="lazy">
-          <span>${owner.nome}</span>
-          <span class="stars">${starsHTML(owner.avaliacaoMedia)}</span>
+          <img src="${ownerData.foto || 'assets/default-avatar.svg'}" alt="" loading="lazy">
+          <span>${ownerData.nome || 'Anunciante'}</span>
+          <span class="stars">${starsHTML(ownerData.avaliacaoMedia)}</span>
         </div>
       </div>
     </article>

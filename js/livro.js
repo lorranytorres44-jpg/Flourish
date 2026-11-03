@@ -44,7 +44,7 @@ if (!book) {
     };
   }));
   const totalAvaliacoes = ownerReviews.length;
-  const avaliacaoMedia = totalAvaliacoes ? ownerReviews.reduce((s, r) => s + r.nota, 0) / totalAvaliacoes : 5;
+  const avaliacaoMedia = totalAvaliacoes ? ownerReviews.reduce((s, r) => s + (r.nota || 0), 0) / totalAvaliacoes : null;
   const session = getSession();
   const isOwner = Boolean(session?.id && book.ownerId === session.id);
 

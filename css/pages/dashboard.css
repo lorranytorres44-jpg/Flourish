@@ -219,6 +219,19 @@
   border: 1.5px solid var(--border);
   border-bottom-left-radius: 4px;
 }
+.chat-bubble-time {
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 4px;
+  text-align: right;
+  opacity: 0.8;
+}
+.chat-bubble.me .chat-bubble-time {
+  color: rgba(255, 255, 255, 0.85);
+}
+.chat-bubble.them .chat-bubble-time {
+  color: var(--text-muted);
+}
 
 .messenger-footer {
   padding: 16px 24px;

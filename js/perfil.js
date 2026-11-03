@@ -27,9 +27,10 @@ let session = getSession() || {};
 const trades = await getTrades();
 const concluidas = trades.filter(t => t.status === 'Finalizada').length;
 const minhasAvaliacoes = await getRatingsForUser(session.id);
-const notaMedia = minhasAvaliacoes.length
-  ? minhasAvaliacoes.reduce((s, r) => s + ratingScore(r), 0) / minhasAvaliacoes.length
-  : 5;
+const notasValidas = minhasAvaliacoes.map(ratingScore).filter(n => n !== null);
+const notaMedia = notasValidas.length
+  ? notasValidas.reduce((s, n) => s + n, 0) / notasValidas.length
+  : null;
 
 function renderHeader() {
   document.getElementById('pFoto').src = session.foto || 'assets/default-avatar.svg';
@@ -37,7 +38,7 @@ function renderHeader() {
   document.getElementById('pLocal').textContent = [session.cidade, session.estado].filter(Boolean).join(' / ') || 'Localização não informada';
   document.getElementById('pBio').textContent = session.bio || 'Ainda não escreveu uma biografia.';
   document.getElementById('statPontos').textContent = getPoints() ?? 0;
-  document.getElementById('statAvaliacao').textContent = `${notaMedia.toFixed(1)}★`;
+  document.getElementById('statAvaliacao').textContent = notaMedia !== null ? `${notaMedia.toFixed(1)}★` : 'Novo leitor';
   document.getElementById('statTrocas').textContent = concluidas;
 }
 renderHeader();

@@ -679,11 +679,30 @@ function openCancelConfirmModal(tradeId) {
   }});
 }
 
+function formatChatTime(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeChatText(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderChatBubbles(msgs, card) {
   const container = card.querySelector('[data-messages]');
   container.innerHTML = msgs.length
-    ? msgs.map(m => `<div class="chat-bubble ${m.autor === session.id ? 'me' : 'them'}">${m.texto}</div>`).join('')
-    : `<p class="text-muted" style="font-size:0.85rem;">Nenhuma mensagem ainda. Diga olá!</p>`;
+    ? msgs.map(m => `
+        <div class="chat-bubble ${m.autor === session.id ? 'me' : 'them'}">
+          <span class="chat-bubble-text">${escapeChatText(m.texto)}</span>
+          <span class="chat-bubble-time">${formatChatTime(m.hora)}</span>
+        </div>
+      `).join('')
+    : `<p class="text-muted" style="font-size:0.85rem;">Nenhuma mensagem ainda. Combine os detalhes da troca aqui!</p>`;
   container.scrollTop = container.scrollHeight;
 }
 

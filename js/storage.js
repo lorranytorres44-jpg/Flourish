@@ -12,7 +12,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc,
-  query, where, orderBy, onSnapshot, increment, serverTimestamp,
+  query, where, orderBy, onSnapshot, increment, serverTimestamp, getCountFromServer,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const DEFAULT_FOTO = 'assets/default-avatar.svg';
@@ -385,6 +385,33 @@ export async function getAllBooks() {
   return getFirestoreBooks();
 }
 
+// Estatísticas reais agregadas do Firestore (zero dados simulados)
+export async function getPlatformStats() {
+  try {
+    const [booksSnap, usersSnap, tradesSnap] = await Promise.all([
+      getCountFromServer(query(collection(db, 'books'), where('disponivel', '!=', false))),
+      getCountFromServer(collection(db, 'users')),
+      getCountFromServer(query(collection(db, 'trades'), where('status', '==', 'Finalizada'))),
+    ]);
+    return {
+      livrosDisponiveis: booksSnap.data().count,
+      usuarios: usersSnap.data().count,
+      trocasConcluidas: tradesSnap.data().count,
+    };
+  } catch (err) {
+    const [booksQs, usersQs, tradesQs] = await Promise.all([
+      getDocs(collection(db, 'books')),
+      getDocs(collection(db, 'users')),
+      getDocs(query(collection(db, 'trades'), where('status', '==', 'Finalizada'))),
+    ]);
+    return {
+      livrosDisponiveis: booksQs.docs.filter(d => d.data().status !== 'trocado' && d.data().disponivel !== false).length,
+      usuarios: usersQs.size,
+      trocasConcluidas: tradesQs.size,
+    };
+  }
+}
+
 // Livros ordenados por curtidas — usado na home.
 export async function getMostLikedBooks(max = 5) {
   const books = await getFirestoreBooks();
@@ -407,17 +434,32 @@ export async function getAnyBookById(id) {
 // sessão atual (evita ida ao servidor) e cai em Firestore para outros usuários reais.
 export async function getOwnerInfo(ownerId) {
   if (cachedUser && ownerId === cachedUser.uid) {
+    const totalAv = cachedSession?.totalAvaliacoes || 0;
     return {
-      id: ownerId, nome: cachedSession?.nome || 'Você', foto: cachedSession?.foto || DEFAULT_FOTO,
-      cidade: cachedSession?.cidade || '', estado: cachedSession?.estado || '', avaliacaoMedia: 5, totalAvaliacoes: 0,
+      id: ownerId,
+      nome: cachedSession?.nome || 'Você',
+      foto: cachedSession?.foto || DEFAULT_FOTO,
+      cidade: cachedSession?.cidade || '',
+      estado: cachedSession?.estado || '',
+      avaliacaoMedia: totalAv > 0 ? (cachedSession?.avaliacaoMedia ?? null) : null,
+      totalAvaliacoes: totalAv,
     };
   }
   const snap = await getDoc(doc(db, 'users', ownerId));
   if (snap.exists()) {
     const d = snap.data();
-    return { id: ownerId, nome: d.nome, foto: d.foto || DEFAULT_FOTO, cidade: d.cidade || '', estado: d.estado || '', avaliacaoMedia: d.avaliacaoMedia ?? 5, totalAvaliacoes: d.totalAvaliacoes ?? 0 };
+    const totalAv = d.totalAvaliacoes || 0;
+    return {
+      id: ownerId,
+      nome: d.nome,
+      foto: d.foto || DEFAULT_FOTO,
+      cidade: d.cidade || '',
+      estado: d.estado || '',
+      avaliacaoMedia: totalAv > 0 ? (d.avaliacaoMedia ?? null) : null,
+      totalAvaliacoes: totalAv,
+    };
   }
-  return { nome: 'Anunciante', foto: DEFAULT_FOTO, cidade: '', estado: '', avaliacaoMedia: 5, totalAvaliacoes: 0 };
+  return { id: ownerId, nome: 'Anunciante', foto: DEFAULT_FOTO, cidade: '', estado: '', avaliacaoMedia: null, totalAvaliacoes: 0 };
 }
 
 // -------- Trocas --------
@@ -745,7 +787,7 @@ export async function getRatingsForUser(userId) {
 export function ratingScore(rating) {
   const keys = ['conservacao', 'comunicacao', 'rapidez', 'experiencia', 'cooperacao'];
   const values = keys.map(k => rating[k]).filter(v => typeof v === 'number');
-  return values.length ? values.reduce((s, v) => s + v, 0) / values.length : 5;
+  return values.length ? values.reduce((s, v) => s + v, 0) / values.length : null;
 }
 
 // -------- Notificações --------

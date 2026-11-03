@@ -1,5 +1,5 @@
 // ============================================
-// Dados mockados — futura substituição por chamadas a backend (Node.js/Firebase)
+// Domínio e Constantes de Negócio — Flowrish
 // ============================================
 
 export const GENEROS = [
@@ -16,9 +16,3 @@ export function bookGeneros(book) {
 }
 
 export const ESTADOS_CONSERVACAO = ['Novo', 'Seminovo', 'Usado'];
-
-export const STATS = {
-  livrosTrocados: 8420,
-  usuarios: 3150,
-  trocasConcluidas: 5230,
-};
