@@ -1,33 +1,172 @@
-.library-header {
-  padding: calc(var(--header-h) + 32px) 0 32px;
-  background: var(--bg-alt);
-  border-bottom: 1px solid var(--border);
+/* ============================================
+   Biblioteca — mesmo visual "flor" da home (oliva, creme e rosa)
+   Reaproveita de home.css: variáveis --hv-*, navbar--home, fundo e cards (.hv-cards).
+   ============================================ */
+.library-page {
+  --lib-sand: #D3CBA8;
+  --lib-sand-text: #8C8463;
+  --lib-panel: #9C9B6B;
+  --lib-chip: #DDD6B8;
+  --lib-ink: #3A3B27;
 }
-.library-layout {
+
+.lib-main {
+  position: relative;
+  padding: calc(var(--header-h) + 28px) 0 120px;
+}
+.lib-inner { max-width: 1020px; }
+
+/* ---------- Busca + botão de filtros ---------- */
+.lib-search-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 940px;
+  margin: 0 auto 26px;
+}
+.lib-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  background: var(--lib-sand);
+  color: var(--lib-ink);
+}
+.lib-search svg { flex-shrink: 0; }
+.lib-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  border: none;
+  background: transparent;
+  font-family: var(--hv-font-body);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--lib-ink);
+  outline: none;
+}
+.lib-search input::placeholder { color: var(--lib-sand-text); opacity: 1; }
+.lib-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.lib-search:focus-within { box-shadow: 0 0 0 3px rgba(75, 76, 51, 0.25); }
+
+.lib-filter-btn {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--lib-sand);
+  color: var(--lib-ink);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.lib-filter-btn:hover { background: #C7BF99; }
+.lib-filter-btn[aria-expanded="true"] { background: var(--hv-olive); color: var(--hv-cream); }
+
+/* ---------- Painel de filtros ---------- */
+.lib-filters {
+  max-width: 940px;
+  margin: 0 auto 40px;
+  padding: 18px 26px 22px;
+  border-radius: 34px;
+  background: var(--lib-panel);
+  color: var(--lib-ink);
+  font-family: var(--hv-font-body);
+  box-shadow: 0 10px 30px rgba(75, 76, 51, 0.15);
+}
+.lib-filters[hidden] { display: none; }
+.lib-filters-top,
+.lib-filters-bottom { display: flex; }
+.lib-filters-top { margin-bottom: 18px; }
+.lib-filters-bottom { align-items: flex-end; flex-wrap: wrap; row-gap: 14px; }
+
+.lib-filter-group { padding: 0 16px; }
+.lib-filter-group:first-child { padding-left: 0; }
+.lib-filter-group + .lib-filter-group { border-left: 2px solid rgba(58, 59, 39, 0.35); }
+.lib-filter-genero { flex: 1; padding-right: 0; text-align: left; }
+.lib-filter-genero .filter-chip-list { justify-content: flex-start; }
+
+.lib-filter-group h2 {
+  margin: 0 0 10px;
+  font-family: var(--hv-font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  color: var(--lib-ink);
+}
+.lib-filter-group h2 label { font: inherit; color: inherit; }
+
+.lib-filters .filter-chip-list { gap: 8px 10px; }
+.lib-filters .filter-chip {
+  padding: 3px 12px;
+  border: 1px solid rgba(58, 59, 39, 0.25);
+  background: var(--lib-chip);
+  color: var(--lib-ink);
+  font-family: var(--hv-font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.lib-filters .filter-chip:hover { background: #E9E3C8; }
+.lib-filters .filter-chip.active { background: var(--hv-olive); border-color: var(--hv-olive); color: var(--hv-cream); }
+
+.lib-select {
+  width: 160px;
+  padding: 4px 32px 4px 12px;
+  border: 1px solid rgba(58, 59, 39, 0.25);
+  border-radius: var(--radius-pill);
+  background: var(--lib-chip) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M0 0h12L6 8z' fill='%233A3B27'/%3E%3C/svg%3E") no-repeat right 12px center;
+  font-family: var(--hv-font-body);
+  font-size: 0.85rem;
+  color: var(--lib-ink);
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.lib-select:focus, .lib-select:focus-visible { outline: none; }
+.lib-clear {
+  margin-left: auto;
+  padding: 4px;
+  border: none;
+  background: none;
+  font-family: var(--hv-font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--lib-ink);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Grade de cards ---------- */
+.lib-count {
+  max-width: 940px;
+  margin: 0 auto 14px;
+  font-family: var(--hv-font-body);
+  font-size: 0.9rem;
+  color: var(--hv-olive-soft);
+}
+.lib-grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 32px;
-  align-items: start;
-  padding: 32px 0 72px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px 48px;
 }
-.filters-panel {
-  position: sticky;
-  top: calc(var(--header-h) + 16px);
-  padding: 22px;
-  max-height: calc(100vh - var(--header-h) - 32px);
-  overflow-y: auto;
-}
-.filters-panel h3 { font-size: 1rem; margin-bottom: 16px; }
-.filter-group { margin-bottom: 22px; }
-.filter-group .group-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; color: var(--text); }
-.results-toolbar {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
-}
-.results-count { color: var(--text-muted); font-size: 0.9rem; }
+.lib-empty { color: var(--hv-title); }
+.library-page .site-footer { margin-top: 0; }
+
+/* ---------- Responsivo ---------- */
 @media (max-width: 960px) {
-  .library-layout { grid-template-columns: 1fr; }
-  .filters-panel { position: static; max-height: none; }
-  .filters-toggle-mobile { display: inline-flex !important; }
+  .lib-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 24px; }
+  .lib-filters-top { flex-direction: column; gap: 18px; }
+  .lib-filters-top .lib-filter-group { flex: none; padding: 0; border-left: none; text-align: left; }
+  .lib-filter-genero .filter-chip-list { justify-content: flex-start; }
 }
-.filters-toggle-mobile { display: none; }
+@media (max-width: 560px) {
+  .lib-main { padding-bottom: 80px; }
+  .lib-search-row { gap: 12px; }
+  .lib-search input { font-size: 1rem; }
+  .lib-filters { padding: 16px 18px 20px; border-radius: 24px; }
+  .lib-filters-bottom .lib-filter-group { padding: 0; border-left: none; flex: 1 1 100%; }
+  .lib-clear { margin-left: 0; }
+  .lib-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
+}

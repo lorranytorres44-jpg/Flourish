@@ -1,167 +1,197 @@
-import { getAnyBookById, isFavorite, toggleFavorite, isLoggedIn, getOwnerInfo, getRatingsForUser, ratingScore, getTradeById, authReady } from './storage.js';
+import { getAnyBookById, isFavorite, toggleFavorite, isLoggedIn, getOwnerInfo, getOwnerTelefone, getMyBooks, getSession, authReady } from './storage.js';
+import { EDIT_ICON, TRASH_FILLED_ICON, editarLivroUrl, confirmarExclusaoLivro } from './book-actions.js';
 import { renderNavbar, renderFooter } from './navbar.js';
-import { starsHTML, initRevealAnimations, PIN_ICON } from './book-card.js';
-import { bookGeneros } from './data.js';
-import { initTheme } from './theme.js';
+import { initRevealAnimations } from './book-card.js';
 import { showToast } from './toast.js';
-import { openTradeModal } from './trade-modal.js';
+import { openModal } from './modal.js';
+import { renderAvaliacoes } from './reviews.js';
+import { whatsappUrl } from './validators.js';
 
-initTheme();
 await authReady;
 renderNavbar('biblioteca.html');
 renderFooter();
+
+const escapeHTML = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const HEART_PATH = 'M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.7 1.2 6 3.5C14.3 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z';
 
 const params = new URLSearchParams(window.location.search);
 const bookId = params.get('id');
 const book = await getAnyBookById(bookId);
 const root = document.getElementById('bookDetailRoot');
 
+// O próprio anúncio (aberto pelo "Meu acervo" ou pela Biblioteca) mostra a versão do dono: sem
+// curtir, sem trocar e sem o quadro do anunciante, com editar e excluir.
+const meuAnuncio = !!book && book.ownerId === getSession()?.id;
+if (meuAnuncio) renderNavbar('acervo.html');
+
 if (!book) {
   root.innerHTML = `
-    <div class="empty-state">
-      <div class="emoji">📕</div>
-      <h3>Livro não encontrado</h3>
+    <div class="empty-state bk-empty">
+      <h1>Livro não encontrado</h1>
       <p>O livro que você procura não existe ou foi removido.</p>
-      <a href="biblioteca.html" class="btn btn-primary">Voltar para a biblioteca</a>
+      <a href="biblioteca.html" class="bk-action">Voltar para a biblioteca</a>
     </div>`;
 } else {
   const owner = await getOwnerInfo(book.ownerId);
   document.title = `${book.titulo} — Flowrish`;
   const fotos = book.fotos?.length ? book.fotos : [book.capa];
 
-  // Avaliações do perfil do anunciante (não do livro específico)
-  const ownerRatings = await getRatingsForUser(book.ownerId);
-  const ownerReviews = await Promise.all(ownerRatings.map(async (r) => {
-    const trade = r.tradeId ? await getTradeById(r.tradeId) : null;
-    return {
-      autor: await getOwnerInfo(r.autorId),
-      nota: ratingScore(r),
-      comentario: r.comentario || '(sem comentário)',
-      bookTitulo: trade?.bookTitulo || '',
-      data: r.criadoEm,
-      tipo: trade?.tipo,
-    };
-  }));
-  const totalAvaliacoes = ownerReviews.length;
-  const avaliacaoMedia = totalAvaliacoes ? ownerReviews.reduce((s, r) => s + r.nota, 0) / totalAvaliacoes : 5;
+  // A troca é combinada pelo WhatsApp do anunciante (só quem está logado vê o número).
+  const telefoneDono = meuAnuncio ? '' : await getOwnerTelefone(book.ownerId).catch(() => '');
+  const localizacao = [owner.cidade, owner.estado].filter(Boolean).join('/');
+
+  const detalhes = [
+    book.editora && `Editora: ${book.editora}`,
+    book.edicao && `${book.edicao}ª edição`,
+    book.paginas && `${book.paginas} páginas`,
+    book.ano && `Ano: ${book.ano}`,
+    book.semDanificacoes ? 'Sem danificações relevantes' : (book.observacoes && `Observações: ${book.observacoes}`),
+  ].filter(Boolean);
 
   root.innerHTML = `
-    <p class="breadcrumb"><a href="index.html">Início</a> / <a href="biblioteca.html">Biblioteca</a> / ${book.titulo}</p>
-    <div class="detail-grid">
-      <div>
-        <div class="gallery-main"><img id="galleryMain" src="${fotos[0]}" alt="Foto de capa de ${book.titulo}"></div>
-        ${fotos.length > 1 ? `<div class="gallery-thumbs">${fotos.map((f, i) => `<img src="${f}" class="${i === 0 ? 'active' : ''}" data-src="${f}" alt="Miniatura ${i + 1}">`).join('')}</div>` : ''}
+    <div class="bk-top">
+      <div class="bk-gallery">
+        <div class="bk-cover">
+          <img id="galleryMain" src="${fotos[0]}" alt="Foto de capa de ${book.titulo}" onerror="this.src='https://placehold.co/345x600/C8EAFB/4B4C33?text=Sem+capa'">
+          ${meuAnuncio ? '' : `<button type="button" class="bk-fav" id="favBtn">
+            <svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART_PATH}"/></svg>
+          </button>`}
+        </div>
+        ${fotos.length > 1 ? `<div class="bk-thumbs">${fotos.map((f, i) => `<button type="button" class="${i === 0 ? 'active' : ''}" data-src="${f}" aria-label="Ver foto ${i + 1}"><img src="${f}" alt=""></button>`).join('')}</div>` : ''}
       </div>
-      <div class="detail-actions-sticky">
-        <div class="detail-title-row">
-          <div>
-            <h1 class="mb-0">${book.titulo}</h1>
-            <p style="font-size:1.1rem;">${book.autor}</p>
-          </div>
-        </div>
-        <div class="detail-badges">
-          ${bookGeneros(book).map(g => `<span class="badge badge-brown">${g}</span>`).join('')}
-          <span class="badge badge-terracotta">${book.nacionalidade}</span>
-          <span class="badge">${book.estadoConservacao}</span>
-          <span class="badge">${PIN_ICON} ${owner.cidade}${owner.estado ? '/' + owner.estado : ''}</span>
-        </div>
-        <p>${book.sinopse || 'Sem sinopse disponível para este livro.'}</p>
-        <ul style="display:flex;flex-direction:column;gap:6px;font-size:0.9rem;color:var(--text-muted);list-style:none;padding-left:0;">
-          ${book.editora ? `<li>• Editora: ${book.editora}</li>` : ''}
-          ${book.edicao ? `<li>• ${book.edicao}ª edição</li>` : ''}
-          ${book.ano ? `<li>• Ano: ${book.ano}</li>` : ''}
-          ${book.paginas ? `<li>• Páginas: ${book.paginas}</li>` : ''}
-          ${book.semDanificacoes ? `<li>• Sem danificações relevantes</li>` : (book.observacoes ? `<li>• Observações: ${book.observacoes}</li>` : '')}
-        </ul>
 
-        <a href="perfil.html" class="card owner-card" style="text-decoration:none;">
-          <img src="${owner.foto}" alt="">
-          <div>
-            <strong>${owner.nome}</strong>
-            <p class="mb-0 stars">${starsHTML(avaliacaoMedia)} <span class="text-muted">(${totalAvaliacoes} avaliações)</span></p>
-          </div>
-        </a>
-
-        <div class="action-buttons">
-          <button class="btn btn-secondary" id="favBtn">♥ Favoritar</button>
-          <button class="btn btn-highlight" id="requestTradeBtn"><img src="assets/troca.png" alt="" width="18" height="18" style="vertical-align:-3px;margin-right:6px;filter:brightness(0) invert(1);">Solicitar Troca</button>
+      <div class="bk-info">
+        <h1 class="bk-title">${book.titulo}</h1>
+        <p class="bk-author">${book.autor}</p>
+        <div class="bk-tags">
+          ${book.generos.map(g => `<span class="bk-tag bk-tag--pink">${g}</span>`).join('')}
+          ${book.nacionalidade ? `<span class="bk-tag">${book.nacionalidade}</span>` : ''}
+          ${book.estadoConservacao ? `<span class="bk-tag bk-tag--pink">${book.estadoConservacao}</span>` : ''}
+          ${localizacao ? `<span class="bk-tag">${localizacao}</span>` : ''}
         </div>
-
-        <div class="detail-tabs-content">
-          <div class="tabs" id="detailTabs">
-            <button class="active" data-tab="avaliacoes">Avaliações de ${owner.nome}</button>
-            <button data-tab="detalhes">Detalhes</button>
-          </div>
-          <div id="tabAvaliacoes" style="padding-top:20px;">
-            <div class="rating-summary">
-              <div class="rating-big">
-                <div class="num">${avaliacaoMedia.toFixed(1)}</div>
-                <div class="stars">${starsHTML(avaliacaoMedia)}</div>
-                <p class="text-muted mb-0" style="font-size:0.8rem;">${totalAvaliacoes} avaliações</p>
-              </div>
-            </div>
-            ${totalAvaliacoes === 0
-              ? `<p class="text-muted">Este anunciante ainda não recebeu avaliações.</p>`
-              : ownerReviews.map(r => `
-              <div class="review-item">
-                <div class="review-head">
-                  <img src="${r.autor.foto}" alt="">
-                  <div>
-                    <strong style="font-size:0.9rem;">${r.autor.nome}</strong>
-                    <div class="stars" style="font-size:0.8rem;">${starsHTML(r.nota)}</div>
-                  </div>
-                </div>
-                <p class="mb-0">${r.comentario}</p>
-                <p class="mb-0 text-muted" style="font-size:0.8rem;margin-top:4px;">${[r.bookTitulo, r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '', r.tipo ? (r.tipo === 'pontos' ? 'Troca por pontos' : 'Proposta de troca') : ''].filter(Boolean).join(' · ')}</p>
-              </div>
-            `).join('')}
-          </div>
-          <div id="tabDetalhes" style="padding-top:20px;display:none;">
-            <p>Cadastrado em: ${new Date(book.dataCadastro).toLocaleDateString('pt-BR')}</p>
-            <p>Tempo de uso informado: ${book.tempoUso || 'não informado'}</p>
-            <p class="mb-0">O site não se responsabiliza por trocas presenciais.</p>
-          </div>
-        </div>
+        <p class="bk-synopsis">${book.sinopse || 'Sem sinopse disponível para este livro.'}</p>
+        ${detalhes.length ? `<ul class="bk-details">${detalhes.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
+        ${meuAnuncio ? `
+        <div class="bk-owner-actions">
+          <a class="bk-owner-btn" href="${editarLivroUrl(book)}" aria-label="Editar ${book.titulo}" title="Editar">${EDIT_ICON}</a>
+          <button type="button" class="bk-owner-btn" id="deleteBookBtn" aria-label="Excluir ${book.titulo}" title="Excluir">${TRASH_FILLED_ICON}</button>
+        </div>` : ''}
       </div>
     </div>
+
+    ${meuAnuncio ? '' : `<div class="bk-bottom">
+      <div class="bk-actions">
+        <button type="button" class="bk-trocar" id="tradeBtn" aria-label="Trocar pelo WhatsApp">
+          <span class="bk-trocar-topo" aria-hidden="true">Trocar pelo</span>
+          <span class="bk-trocar-marca" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.3 21.7l4.8-1.3A9.8 9.8 0 1 0 12 2.2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path transform="translate(-1.3 0.1)" d="M8.6 7.3c.3-.5.6-.5.9-.5h.6c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.2.4 0 .6.4.8 1 1.5 1.7 2.1.6.5 1.3.9 2 1.2.2.1.4 0 .6-.1l.7-.8c.2-.2.4-.2.6-.1l1.8.9c.2.1.4.2.4.4 0 .5-.1 1.1-.5 1.5-.5.5-1.3.9-2.1.8-1.5-.2-3.4-1-5-2.6S8 10.3 7.8 8.9c-.1-.6.4-1.2.8-1.6z" fill="currentColor"/></svg>
+            WhatsApp
+          </span>
+        </button>
+      </div>
+
+      <section class="bk-owner" aria-labelledby="ownerName">
+        <header class="bk-owner-head">
+          <a href="anunciante.html?id=${encodeURIComponent(book.ownerId)}" class="bk-owner-link">
+            <img src="${owner.foto}" alt="">
+            <h2 id="ownerName">${owner.nome}</h2>
+          </a>
+          <p class="bk-owner-score" data-score></p>
+        </header>
+        <div class="bk-owner-subrow">
+          <h3 class="bk-owner-sub">Avaliações</h3>
+          <button type="button" class="bk-avaliar" data-avaliar hidden>Avaliar</button>
+        </div>
+        <div data-reviews></div>
+      </section>
+    </div>`}
   `;
 
   // Galeria
-  root.querySelectorAll('.gallery-thumbs img').forEach(thumb => {
+  root.querySelectorAll('.bk-thumbs button').forEach(thumb => {
     thumb.addEventListener('click', () => {
       document.getElementById('galleryMain').src = thumb.dataset.src;
-      root.querySelectorAll('.gallery-thumbs img').forEach(t => t.classList.remove('active'));
+      root.querySelectorAll('.bk-thumbs button').forEach(t => t.classList.remove('active'));
       thumb.classList.add('active');
     });
   });
 
-  // Tabs
-  root.querySelectorAll('#detailTabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      root.querySelectorAll('#detailTabs button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tabAvaliacoes').style.display = btn.dataset.tab === 'avaliacoes' ? 'block' : 'none';
-      document.getElementById('tabDetalhes').style.display = btn.dataset.tab === 'detalhes' ? 'block' : 'none';
+  if (meuAnuncio) {
+    document.getElementById('deleteBookBtn').addEventListener('click', () => {
+      confirmarExclusaoLivro(book, { onDeleted: () => setTimeout(() => { window.location.href = 'acervo.html'; }, 900) });
     });
-  });
+  } else {
+    // Ações
+    function requireLogin() {
+      if (!isLoggedIn()) { showToast('Entre na sua conta', 'Faça login para continuar.'); return false; }
+      return true;
+    }
 
-  // Ações
-  function requireLogin() {
-    if (!isLoggedIn()) { showToast('Entre na sua conta', 'Faça login para continuar.', 'info'); return false; }
-    return true;
+    const favBtn = document.getElementById('favBtn');
+    const setFavState = () => {
+      const fav = isFavorite(book.id);
+      favBtn.classList.toggle('active', fav);
+      favBtn.setAttribute('aria-pressed', fav);
+      favBtn.setAttribute('aria-label', fav ? 'Remover dos favoritos' : 'Favoritar');
+    };
+    setFavState();
+    favBtn.addEventListener('click', async () => {
+      if (!requireLogin()) return;
+      await toggleFavorite(book.id);
+      setFavState();
+      showToast(isFavorite(book.id) ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
+    });
+
+    renderAvaliacoes(document.querySelector('.bk-owner'), owner);
+
+    // "Trocar": quem pede escolhe um livro do próprio acervo para oferecer, e
+    // a conversa no WhatsApp do anunciante já abre com a proposta escrita.
+    document.getElementById('tradeBtn').addEventListener('click', async (e) => {
+      if (!requireLogin()) return;
+      if (!telefoneDono) {
+        showToast('WhatsApp indisponível', 'Este anunciante ainda não informou o WhatsApp.');
+        return;
+      }
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      const meusLivros = await getMyBooks().catch(() => []);
+      btn.disabled = false;
+      abrirProposta(meusLivros);
+    });
   }
 
-  const favBtn = document.getElementById('favBtn');
-  const setFavLabel = () => { favBtn.innerHTML = isFavorite(book.id) ? '♥ Favoritado' : '♡ Favoritar'; };
-  setFavLabel();
-  favBtn.addEventListener('click', async () => {
-    if (!requireLogin()) return;
-    await toggleFavorite(book.id);
-    setFavLabel();
-    showToast(isFavorite(book.id) ? 'Adicionado aos favoritos' : 'Removido dos favoritos', '', 'success', 2000);
-  });
+  function abrirProposta(meusLivros) {
+    const inicio = `Olá, ${owner.nome}! Vi o livro "${book.titulo}" na Flowrish e tenho interesse em trocar.`;
+    // Toda mensagem de troca começa com o aviso de respeito e termina com a
+    // recomendação de envio do Flowrish.
+    const comAvisos = (texto) => '“Lembrem de sempre manter o respeito e cordialidade.”\n\n'
+      + texto
+      + '\n\n-Um método de envio recomendado pelo Flowrish é o Clique e Retire dos Correios. Acesse o site oficial para mais informações: https://www.correios.com.br';
+    const urlLivro = (b) => new URL(`livro.html?id=${b.id}`, window.location.href).href;
+    const linkProposta = (b) => whatsappUrl(telefoneDono,
+      comAvisos(`${inicio} Ofereço em troca o meu livro "${b.titulo}"${b.autor ? `, de ${b.autor}` : ''}: ${urlLivro(b)}`));
+    const lista = meusLivros
+      .sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro))
+      .map(b => `
+        <li>
+          <a class="proposta-livro" href="${linkProposta(b)}" target="_blank" rel="noopener" data-proposta>
+            <img src="${escapeHTML(b.capa)}" alt="" onerror="this.src='https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'">
+            <span><strong>${escapeHTML(b.titulo)}</strong>${b.autor ? `<small>${escapeHTML(b.autor)}</small>` : ''}</span>
+          </a>
+        </li>`).join('');
 
-  document.getElementById('requestTradeBtn').addEventListener('click', () => openTradeModal(book));
+    openModal(`
+      <button type="button" class="proposta-fechar" data-modal-close aria-label="Fechar">✕</button>
+      <h3 id="propostaTitle" class="proposta-titulo">Qual livro você oferece em troca?</h3>
+      ${meusLivros.length ? `
+        <p class="proposta-texto">Escolha um livro do seu acervo para propor a ${escapeHTML(owner.nome.split(' ')[0])} por "${escapeHTML(book.titulo)}".</p>
+        <ul class="proposta-lista">${lista}</ul>` : `
+        <p class="proposta-texto">Você ainda não tem livros no seu acervo. Anuncie um para oferecer em troca.</p>
+        <a class="proposta-anunciar" href="cadastrar-livro.html">Anunciar um livro</a>`}
+    `, { labelledBy: 'propostaTitle', className: 'proposta-modal', onMount: (overlay, close) => {
+      overlay.querySelectorAll('[data-proposta]').forEach(a => a.addEventListener('click', close));
+    }});
+  }
 
   initRevealAnimations();
 }

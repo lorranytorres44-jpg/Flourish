@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="906" height="2000" viewBox="0 0 906 2000">
+  <!-- Fundo padrão do site: creme com uma faixa rosa ondulada (css/pages/home.css: largura da página, a partir do topo) -->
+  <rect width="906" height="2000" fill="#F7EFDC"/>
+  <path fill="#E3BBBB" d="M0 422 C110 455 200 475 285 474 C390 473 445 445 495 410 C580 352 650 318 755 317 C820 316 865 330 906 343 L906 1190 C880 1220 820 1240 745 1240 C650 1240 580 1205 480 1165 C390 1132 300 1133 200 1132 C110 1131 50 1124 0 1108 Z"/>
+</svg>

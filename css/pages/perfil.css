@@ -1,16 +1,115 @@
-.profile-header {
-  padding: calc(var(--header-h) + 40px) 0 40px;
-  background: linear-gradient(180deg, var(--sage-light), var(--bg) 90%);
+/* ============================================
+   Perfil — cabeçalho creme com onda rosa e painel de abas
+   (visual próprio: não usa o fundo padrão das outras páginas)
+   (Favoritos, Avaliações, Configurações)
+   ============================================ */
+.perfil-page {
+  --pf-olive: #4B4C33;
+  --pf-cream: #F5EEDA;
+  --pf-pink: #E3B9BC;
+  --pf-pink-soft: #E8C6C6;
+  --pf-chip: #B3AF85;
+  --pf-sand: #D6D0B1;
+  background: var(--pf-cream);
+  color: var(--pf-olive);
 }
-[data-theme="dark"] .profile-header { background: linear-gradient(180deg, var(--bg-alt), var(--bg) 90%); }
-.profile-top {
-  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
-}
-.profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: var(--shadow-md); }
-.profile-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.profile-stats-row { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
-.profile-stats-row div strong { display: block; font-family: var(--font-heading); font-size: 1.3rem; }
-.profile-stats-row div span { font-size: 0.8rem; color: var(--text-muted); }
-.profile-body { padding: 40px 0 72px; }
-.profile-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
+/* ---------- Cabeçalho ---------- */
+.perfil-topo {
+  position: relative;
+  padding: calc(var(--header-h) + 44px) 16px 120px;
+  overflow: hidden;
+}
+.perfil-topo-inner, .perfil-numeros { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; }
+.perfil-topo-inner { display: flex; align-items: center; gap: 22px; }
+.perfil-foto { flex: none; width: 140px; height: 140px; border-radius: 50%; object-fit: cover; background: #D481A3; }
+.perfil-info { min-width: 0; }
+.perfil-nome { margin: 0 0 8px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: clamp(1.8rem, 3.2vw, 2.4rem); line-height: 1.1; color: var(--pf-olive); }
+.perfil-local {
+  display: inline-block; padding: 3px 18px; border-radius: 999px;
+  background: var(--pf-chip); color: var(--pf-olive); font-family: 'Open Sans', sans-serif; font-size: 1rem;
+}
+.perfil-bio { margin: 14px 0 0; max-width: 520px; font-family: 'Open Sans', sans-serif; font-size: 1.02rem; line-height: 1.5; color: var(--pf-olive); overflow-wrap: anywhere; }
+.perfil-numeros {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px;
+  list-style: none; margin-top: 26px; padding: 0 0 0 162px;
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 1.05rem;
+}
+.perfil-numeros li { display: flex; align-items: center; gap: 6px; }
+.perfil-onda { position: absolute; left: 0; bottom: 0; width: 100%; height: 230px; fill: var(--pf-pink); z-index: 0; }
+/* Nota: mesmo tamanho e fonte dos outros números da linha */
+.perfil-nota > span:first-child:not(.bk-score-vazio) { font-weight: bolder; } /* o número, como os <strong> ao lado */
+.perfil-nota .bk-score-vazio { font-size: inherit; opacity: 1; }
+.perfil-nota .bk-stars { font-size: 1.3em; letter-spacing: 1px; }
+
+/* ---------- Painel de abas ---------- */
+.perfil-corpo {
+  position: relative; z-index: 1;
+  margin-top: -36px; padding: 14px 16px 72px; min-height: 60vh;
+  background: var(--pf-cream);
+}
+.perfil-corpo > * { max-width: 1040px; margin-left: auto; margin-right: auto; }
+.perfil-abas {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding-bottom: 8px; margin-bottom: 26px; border-bottom: 1px solid var(--pf-olive);
+  overflow-x: auto; scrollbar-width: none;
+}
+.perfil-abas::-webkit-scrollbar { display: none; }
+.perfil-abas button {
+  flex: 1 0 auto; padding: 4px 22px; border: none; border-radius: 999px; background: none; cursor: pointer;
+  color: var(--pf-olive); font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 1.1rem; white-space: nowrap;
+}
+.perfil-abas button.active { background: var(--pf-pink-soft); }
+.perfil-abas button:not(.active):hover { background: rgba(232, 198, 198, 0.45); }
+
+/* Avaliações recebidas: mesmo painel oliva da página do livro */
+.perfil-avaliacoes .bk-review-head .bk-stars { font-size: 1.3rem; }
+.perfil-avaliacoes { margin-top: 28px; padding: 26px 30px 30px; border-radius: 34px; background: var(--pf-olive); color: #F6EED9; font-family: 'DM Sans', sans-serif; }
+
+/* Configurações */
+.perfil-config { display: grid; grid-template-columns: 250px 1fr; margin-top: -26px; }
+.perfil-config-menu { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px 18px 40px 16px; border-right: 3px solid var(--pf-olive); }
+.perfil-config-menu button {
+  display: flex; align-items: center; gap: 10px; padding: 4px 20px 4px 14px; border: none; border-radius: 999px; background: none; cursor: pointer;
+  color: var(--pf-olive); font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 1.05rem;
+}
+.perfil-config-menu button svg { width: 22px; height: 22px; flex: none; }
+.perfil-config-menu button.active { background: var(--pf-sand); }
+.perfil-config-menu button:not(.active):hover { background: rgba(214, 208, 177, 0.5); }
+.perfil-config-form { padding: 20px 0 20px 46px; font-family: 'Open Sans', sans-serif; }
+.perfil-config-form > label { display: block; margin: 22px 0 6px 6px; font-weight: 700; font-size: 1.05rem; color: var(--pf-olive); }
+.perfil-config-foto { display: flex; align-items: flex-end; gap: 40px; }
+.perfil-config-foto img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; background: #D481A3; }
+.perfil-config-foto label { margin-bottom: 18px; color: var(--pf-olive); font-size: 1.05rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.perfil-input {
+  display: block; width: 100%; height: 38px; padding: 0 18px; border: none; border-radius: 999px;
+  background: var(--pf-sand); color: var(--pf-olive); font: inherit; font-size: 1rem;
+}
+.perfil-input:focus { outline: 2px solid var(--pf-pink); outline-offset: 2px; }
+.perfil-config-local { display: grid; grid-template-columns: 1fr 140px; gap: 30px; }
+.perfil-config-bio { height: 150px; padding: 14px 20px; border-radius: 30px; resize: vertical; line-height: 1.5; }
+.perfil-salvar {
+  display: block; width: 100%; margin-top: 36px; padding: 6px 20px; border: none; border-radius: 999px; cursor: pointer;
+  background: var(--pf-pink); color: var(--pf-olive); font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 1.15rem;
+}
+.perfil-salvar:hover { background: #D9A6AA; }
+.perfil-salvar:disabled { opacity: 0.6; cursor: wait; }
+
+/* ---------- Celular e tablet ---------- */
+@media (max-width: 760px) {
+  .perfil-topo { padding: calc(var(--header-h) + 28px) 16px 90px; }
+  .perfil-topo-inner { flex-direction: column; text-align: center; gap: 14px; }
+  .perfil-foto { width: 110px; height: 110px; }
+  .perfil-bio { margin-left: auto; margin-right: auto; }
+  .perfil-numeros { justify-content: center; padding-left: 0; font-size: 0.95rem; gap: 8px 20px; }
+  .perfil-onda { height: 140px; }
+  .perfil-abas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .perfil-abas button { font-size: 0.95rem; padding: 5px 10px; }
+  .perfil-config { grid-template-columns: 1fr; margin-top: 0; }
+  .perfil-config-menu { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 0 0 14px; border-right: none; border-bottom: 3px solid var(--pf-olive); }
+  .perfil-config-menu button { font-size: 0.95rem; }
+  .perfil-config-form { padding: 18px 0 0; }
+  .perfil-config-foto { gap: 20px; }
+  .perfil-config-foto img { width: 100px; height: 100px; }
+  .perfil-config-local { grid-template-columns: 1fr 96px; gap: 12px; }
+}

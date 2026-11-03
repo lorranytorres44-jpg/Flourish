@@ -20,7 +20,7 @@ export function populateEstados(selectEl) {
   });
 }
 
-export function passwordStrengthScore(senha) {
+function passwordStrengthScore(senha) {
   let score = 0;
   if (senha.length >= 6) score += 1;
   if (senha.length >= 10) score += 1;
@@ -46,29 +46,23 @@ export function bindPasswordStrength(inputEl, barEl) {
 
 export function openForgotPasswordModal(sendPasswordReset) {
   openModal(`
-    <div class="modal-header">
-      <h3 id="forgotTitle">Recuperar senha</h3>
-      <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
-    </div>
-    <p>Informe o mesmo e-mail cadastrado na sua conta e enviaremos um link para redefinir sua senha.</p>
+    <h3 id="forgotTitle" class="senha-modal-titulo">Recuperar a senha</h3>
+    <p class="senha-modal-texto">Informe o mesmo email cadastrado na sua conta e enviaremos um link para redefinir a senha.</p>
     <form id="forgotForm">
-      <div class="field">
-        <label for="forgotEmail">E-mail</label>
-        <input class="input" type="email" id="forgotEmail" required placeholder="voce@email.com">
-      </div>
-      <button type="submit" class="btn btn-primary btn-block">Enviar link de recuperação</button>
+      <input class="senha-modal-input" type="email" id="forgotEmail" required aria-label="Email" autocomplete="email">
+      <button type="submit" class="senha-modal-enviar">Enviar</button>
     </form>
-    <p class="text-muted" style="font-size:0.85rem;margin-top:14px;margin-bottom:0;">Não recebeu o e-mail? Verifique sua caixa de Spam.</p>
-  `, { labelledBy: 'forgotTitle', onMount: (overlay, close) => {
+    <p class="senha-modal-obs">Não recebeu o email? Verifique sua caixa de spam.</p>
+  `, { labelledBy: 'forgotTitle', className: 'senha-modal', onMount: (overlay, close) => {
     overlay.querySelector('#forgotForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = overlay.querySelector('#forgotEmail').value.trim();
       try {
         await sendPasswordReset(email);
         close();
-        showToast('Link enviado!', 'Verifique sua caixa de entrada para redefinir a senha.', 'success');
+        showToast('Link enviado!', 'Verifique sua caixa de entrada para redefinir a senha.');
       } catch {
-        showToast('Não foi possível enviar', 'Verifique se o e-mail está correto.', 'error');
+        showToast('Não foi possível enviar', 'Verifique se o e-mail está correto.');
       }
     });
   }});

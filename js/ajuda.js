@@ -1,5 +1,4 @@
 import { renderNavbar, renderFooter } from './navbar.js';
-import { initTheme } from './theme.js';
 import { authReady, getSession } from './storage.js';
 import { showToast } from './toast.js';
 
@@ -11,7 +10,6 @@ const EMAILJS_SERVICE_ID = 'service_tuc8gz9';
 const EMAILJS_TEMPLATE_ID = 'template_39mhb4w';
 const EMAILJS_PUBLIC_KEY = 'bcGVmaXDQMLwyHWSQ';
 
-initTheme();
 await authReady;
 renderNavbar('ajuda.html');
 renderFooter();
@@ -43,12 +41,12 @@ document.getElementById('ajudaForm').addEventListener('submit', async (e) => {
       message: mensagem,
       time: new Date().toLocaleString('pt-BR'),
     });
-    showToast('Mensagem enviada!', 'Vamos responder no seu e-mail em breve.', 'success');
+    showToast('Mensagem enviada!', 'Vamos responder no seu e-mail em breve.');
     e.target.reset();
   } catch (err) {
-    showToast('Não foi possível enviar', 'Tente novamente em instantes.', 'error');
+    showToast('Não foi possível enviar', 'Tente novamente em instantes.');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Enviar mensagem';
+    btn.textContent = 'Enviar';
   }
 });

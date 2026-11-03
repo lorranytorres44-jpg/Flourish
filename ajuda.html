@@ -2,39 +2,34 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Ajuda — Flowrish</title>
+<meta name="theme-color" content="#4B4C33">
 <meta name="description" content="Fale com a equipe da Flowrish — envie sua dúvida, sugestão ou problema.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Fredoka:wght@700&family=Oswald:wght@700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/home.css">
+<link rel="stylesheet" href="css/pages/ajuda.css">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
-<body>
+<body class="home-page ajuda-body">
 <div id="navbar-root"></div>
 
-<main class="container" style="max-width:560px;padding-top:calc(var(--header-h) + 48px);padding-bottom:64px;">
-  <h1>Central de ajuda</h1>
-  <p class="text-muted">Tem uma dúvida, sugestão ou problema? Escreva pra gente — respondemos por e-mail.</p>
-
-  <form id="ajudaForm" class="card" style="padding:28px;margin-top:24px;">
-    <div class="field">
-      <label for="ajudaNome">Nome</label>
-      <input class="input" type="text" id="ajudaNome" required placeholder="Seu nome">
-    </div>
-    <div class="field">
-      <label for="ajudaEmail">E-mail</label>
-      <input class="input" type="email" id="ajudaEmail" required placeholder="voce@email.com">
-    </div>
-    <div class="field">
-      <label for="ajudaMensagem">Mensagem</label>
-      <textarea class="input" id="ajudaMensagem" rows="5" required placeholder="Descreva sua dúvida ou problema..."></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary btn-block btn-lg" id="ajudaSubmitBtn">Enviar mensagem</button>
+<main class="ajuda-page">
+  <form id="ajudaForm" class="ajuda-card">
+    <h1 class="ajuda-titulo">Central de ajuda!</h1>
+    <p class="ajuda-texto">Tem alguma dúvida, sugestão ou problema? Nos escreva e responderemos seu email assim que possível!</p>
+    <label class="ajuda-label" for="ajudaNome">Nome</label>
+    <input class="ajuda-input" type="text" id="ajudaNome" required autocomplete="name">
+    <label class="ajuda-label" for="ajudaEmail">Email</label>
+    <input class="ajuda-input" type="email" id="ajudaEmail" required autocomplete="email">
+    <label class="ajuda-label" for="ajudaMensagem">Mensagem</label>
+    <textarea class="ajuda-input ajuda-mensagem" id="ajudaMensagem" rows="5" required></textarea>
+    <button type="submit" class="ajuda-enviar" id="ajudaSubmitBtn">Enviar</button>
   </form>
 </main>
 

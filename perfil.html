@@ -2,63 +2,82 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meu Perfil — Flowrish</title>
-<meta name="description" content="Veja e edite seu perfil, pontos e histórico na Flowrish.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<meta name="theme-color" content="#4B4C33">
+<meta name="description" content="Veja e edite seu perfil, veja seus favoritos, avaliações e configurações na Flowrish.">
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Fredoka:wght@600;700&family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/avaliacoes.css">
+<link rel="stylesheet" href="css/pages/home.css">
 <link rel="stylesheet" href="css/pages/perfil.css">
 </head>
-<body>
+<body class="home-page perfil-page">
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
 <div id="navbar-root"></div>
 
-<header class="profile-header">
-  <div class="container">
-    <div class="profile-top">
-      <img class="profile-avatar" id="pFoto" src="" alt="Foto de perfil">
-      <div style="flex:1;min-width:240px;">
-        <div class="profile-name-row">
-          <h1 class="mb-0" id="pNome">—</h1>
-          <button class="btn btn-secondary btn-sm" id="editProfileBtn">✏️ Editar perfil</button>
-        </div>
-        <p class="mb-0" id="pLocal">—</p>
-        <p id="pBio" style="max-width:560px;"></p>
-        <div class="profile-stats-row">
-          <div><strong id="statPontos">0</strong><span>pontos</span></div>
-          <div><strong id="statAvaliacao">5.0★</strong><span>avaliação média</span></div>
-          <div><strong id="statAnunciados">0</strong><span>livros anunciados</span></div>
-          <div><strong id="statTrocas">0</strong><span>trocas concluídas</span></div>
-        </div>
-      </div>
+<header class="perfil-topo">
+  <div class="perfil-topo-inner">
+    <img class="perfil-foto" id="pFoto" src="" alt="Foto de perfil">
+    <div class="perfil-info">
+      <h1 class="perfil-nome" id="pNome">—</h1>
+      <span class="perfil-local" id="pLocal">—</span>
+      <p class="perfil-bio" id="pBio"></p>
     </div>
   </div>
+  <ul class="perfil-numeros">
+    <li><strong id="statAnunciados">0</strong> Livros anunciados</li>
+    <li class="perfil-nota" data-score></li>
+    <li><strong id="statFavoritos">0</strong> Favoritos</li>
+  </ul>
+  <svg class="perfil-onda" viewBox="0 0 1366 280" preserveAspectRatio="none" aria-hidden="true"><path d="M0 162 C190 222 330 248 430 248 C620 248 720 200 820 130 C930 50 1030 10 1140 10 C1230 10 1300 30 1366 52 L1366 280 L0 280Z"/></svg>
 </header>
 
-<main class="container profile-body">
-  <div class="tabs" id="profileTabs">
-    <button class="active" data-tab="anunciados">Livros anunciados</button>
-    <button data-tab="historico">Histórico de trocas</button>
-    <button data-tab="favoritos">Favoritos</button>
-    <button data-tab="generos">Gêneros favoritos</button>
+<main id="main" class="perfil-corpo">
+  <div class="perfil-abas" id="profileTabs" role="tablist">
+    <button class="active" data-tab="favoritos" role="tab">Favoritos</button>
+    <button data-tab="avaliacoes" role="tab">Avaliações</button>
+    <button data-tab="config" role="tab">Configurações</button>
   </div>
 
-  <div class="tab-panel" id="panel-anunciados" style="padding-top:28px;">
-    <div class="book-grid" id="gridAnunciados"></div>
-  </div>
-  <div class="tab-panel" id="panel-historico" style="padding-top:28px;display:none;">
-    <div id="listHistorico"></div>
-  </div>
-  <div class="tab-panel" id="panel-favoritos" style="padding-top:28px;display:none;">
-    <div class="book-grid" id="gridFavoritos"></div>
-  </div>
-  <div class="tab-panel" id="panel-generos" style="padding-top:28px;display:none;">
-    <div class="profile-genres" id="genreList"></div>
-  </div>
+  <section class="tab-panel" id="panel-favoritos">
+    <div class="book-grid hv-cards" id="gridFavoritosDash"></div>
+  </section>
+  <section class="tab-panel" id="panel-avaliacoes" hidden>
+    <div class="perfil-avaliacoes" data-reviews></div>
+  </section>
+  <section class="tab-panel" id="panel-config" hidden>
+    <div class="perfil-config">
+      <nav class="perfil-config-menu">
+        <button type="button" class="active" id="editarPerfilBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="currentColor"/></svg> Editar perfil</button>
+        <button type="button" id="excluirContaBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v7M14 10v7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Excluir conta</button>
+        <button type="button" id="logoutBtnDash"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Sair da conta</button>
+      </nav>
+      <form class="perfil-config-form" id="editForm" novalidate>
+        <div class="perfil-config-foto">
+          <img id="editAvatarPreview" src="" alt="">
+          <label for="editFotoInput">Trocar foto</label>
+          <input type="file" id="editFotoInput" accept="image/*" class="visually-hidden">
+        </div>
+        <label for="editNome">Nome</label>
+        <input class="perfil-input" id="editNome" autocomplete="name">
+        <label for="editTelefone">Número do WhatsApp</label>
+        <input class="perfil-input" id="editTelefone" type="tel" inputmode="numeric" maxlength="15" placeholder="(11) 99999-9999" autocomplete="tel-national">
+        <label for="editCidade">Cidade/UF</label>
+        <div class="perfil-config-local">
+          <input class="perfil-input" id="editCidade" autocomplete="address-level2">
+          <select class="perfil-input" id="editEstado" aria-label="Estado"></select>
+        </div>
+        <label for="editBio">Biografia</label>
+        <textarea class="perfil-input perfil-config-bio" id="editBio" maxlength="200" rows="4"></textarea>
+        <button type="submit" class="perfil-salvar">Salvar</button>
+      </form>
+    </div>
+  </section>
 </main>
 
 <div id="footer-root"></div>

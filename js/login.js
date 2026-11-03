@@ -1,11 +1,9 @@
 import { loginWithEmail, loginWithGoogle, isLoggedIn, authReady, sendPasswordReset } from './storage.js';
 import { showToast } from './toast.js';
-import { initTheme } from './theme.js';
 import { openForgotPasswordModal } from './auth.js';
 
-initTheme();
 await authReady;
-if (isLoggedIn()) window.location.href = 'dashboard.html';
+if (isLoggedIn()) window.location.href = 'perfil.html';
 
 function mensagemErro(err) {
   const map = {
@@ -28,10 +26,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
   try {
     await loginWithEmail({ email, senha });
-    showToast('Login realizado!', 'Bem-vindo(a) de volta.', 'success');
-    setTimeout(() => window.location.href = 'dashboard.html', 500);
+    showToast('Login realizado!', 'Bem-vindo(a) de volta.');
+    setTimeout(() => window.location.href = 'perfil.html', 500);
   } catch (err) {
-    showToast('Erro ao entrar', mensagemErro(err), 'error');
+    showToast('Erro ao entrar', mensagemErro(err));
     btn.disabled = false;
   }
 });
@@ -39,10 +37,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
   try {
     await loginWithGoogle();
-    showToast('Login com Google', 'Conta conectada com sucesso.', 'success');
-    setTimeout(() => window.location.href = 'dashboard.html', 500);
+    showToast('Login com Google', 'Conta conectada com sucesso.');
+    setTimeout(() => window.location.href = 'perfil.html', 500);
   } catch (err) {
-    showToast('Erro ao entrar com Google', mensagemErro(err), 'error');
+    showToast('Erro ao entrar com Google', mensagemErro(err));
   }
 });
 

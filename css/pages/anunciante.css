@@ -1,0 +1,81 @@
+/* ============================================
+   Perfil público do anunciante — visual "flor" da home.
+   Reaproveita de livro.css: cores --bk-*, painel oliva (.bk-owner) e avaliações (.bk-review).
+   ============================================ */
+.sl-main {
+  position: relative;
+  padding: calc(var(--header-h) + 44px) 0 120px;
+  font-family: var(--hv-font-body);
+  color: var(--hv-olive);
+}
+.sl-inner { max-width: 1020px; }
+
+/* ---------- Cabeçalho ---------- */
+.sl-header { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.sl-avatar {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--hv-rose);
+  background: var(--hv-rose);
+  object-fit: cover;
+}
+.sl-name {
+  margin: 0;
+  font-family: var(--hv-font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  line-height: 1.1;
+  color: var(--hv-olive);
+}
+.sl-location {
+  display: inline-block;
+  margin: 8px 0 0;
+  padding: 2px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--bk-sand);
+  font-size: 0.9rem;
+  color: var(--hv-olive);
+}
+.sl-reviews { margin-top: 56px; padding-top: 24px; }
+.sl-reviews .bk-owner-sub { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sl-reviews .bk-owner-sub .bk-owner-score { font-size: 1.1rem; }
+
+.sl-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1rem;
+}
+.sl-stats li { display: flex; align-items: center; gap: 6px; }
+.sl-stats strong { font-family: var(--hv-font-display); font-weight: 600; font-size: 1.35rem; }
+.sl-stats .bk-stars { font-size: 1.1rem; }
+.sl-score { gap: 8px; font-family: var(--hv-font-display); font-weight: 600; font-size: 1.35rem; }
+.sl-score .bk-score-vazio { font-family: var(--hv-font-body); font-weight: 400; font-size: 1rem; }
+
+/* ---------- Livros anunciados ---------- */
+.sl-books { margin-top: 150px; }
+.sl-section-title {
+  margin: 0 0 24px;
+  font-family: var(--hv-font-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--hv-title);
+}
+.sl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 32px; }
+.sl-grid > .empty-state { grid-column: 1 / -1; color: var(--hv-olive); }
+
+/* ---------- Avaliações ---------- */
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 960px) {
+  .sl-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 24px; }
+}
+@media (max-width: 560px) {
+  .sl-header { flex-direction: column; text-align: center; gap: 16px; }
+  .sl-stats { justify-content: center; }
+  .sl-books { margin-top: 110px; }
+  .sl-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
+}

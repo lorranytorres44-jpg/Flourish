@@ -1,11 +1,9 @@
-import { GENEROS, ESTADOS_CONSERVACAO, bookGeneros } from './data.js';
+import { GENEROS, ESTADOS_CONSERVACAO } from './data.js';
 import { getAllBooks, getOwnerInfo, authReady } from './storage.js';
 import { renderNavbar, renderFooter } from './navbar.js';
 import { ESTADOS_BR, NOMES_ESTADOS } from './auth.js';
 import { bookCardHTML, bindBookCardEvents, initRevealAnimations } from './book-card.js';
-import { initTheme } from './theme.js';
 
-initTheme();
 await authReady;
 renderNavbar('biblioteca.html');
 renderFooter();
@@ -74,10 +72,13 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   applyFilters();
 });
-document.getElementById('toggleFiltersMobile')?.addEventListener('click', () => {
-  document.getElementById('filtersPanel').classList.toggle('is-open-mobile');
-  document.getElementById('filtersPanel').style.display =
-    document.getElementById('filtersPanel').style.display === 'block' ? '' : 'block';
+const filtersBtn = document.getElementById('toggleFilters');
+const filtersPanel = document.getElementById('filtersPanel');
+filtersBtn.addEventListener('click', () => {
+  const open = filtersPanel.hidden;
+  filtersPanel.hidden = !open;
+  filtersBtn.setAttribute('aria-expanded', String(open));
+  filtersBtn.setAttribute('aria-label', open ? 'Ocultar filtros' : 'Mostrar filtros');
 });
 
 function applyFilters() {
@@ -87,7 +88,7 @@ function applyFilters() {
     const q = state.nome.toLowerCase();
     books = books.filter(b => b.titulo.toLowerCase().includes(q) || b.autor.toLowerCase().includes(q));
   }
-  if (state.genero) books = books.filter(b => bookGeneros(b).includes(state.genero));
+  if (state.genero) books = books.filter(b => b.generos.includes(state.genero));
   if (state.conservacao) books = books.filter(b => b.estadoConservacao === state.conservacao);
   if (state.origem) books = books.filter(b => b.nacionalidade === state.origem);
   if (state.estado) books = books.filter(b => ownerMap.get(b.ownerId)?.estado === state.estado);

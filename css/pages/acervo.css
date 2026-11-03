@@ -1,0 +1,53 @@
+/* ============================================
+   Meu acervo — layout da Biblioteca (biblioteca.css) em tons de rosa,
+   com os botões de editar (lápis) e excluir (lixeira) nos cards.
+   ============================================ */
+.acervo-page {
+  --lib-sand: #E8C2C4;
+  --lib-sand-text: #9A7C7F;
+  --lib-panel: #E6C3C4;
+  --lib-chip: #E3A2B8;
+}
+/* Botão de filtros rosa também com o painel aberto (na Biblioteca ele fica oliva) */
+.acervo-page .lib-filter-btn,
+.acervo-page .lib-filter-btn[aria-expanded="true"] { background: var(--lib-sand); color: var(--lib-ink); }
+.acervo-page .lib-filter-btn:hover { background: #DEB1B4; }
+.acervo-page .lib-filters .filter-chip { border-color: transparent; }
+.acervo-page .lib-filters .filter-chip:hover { background: #EBB6C7; }
+.acervo-page .lib-filters .filter-chip.active { background: var(--hv-olive); color: var(--hv-cream); }
+.acervo-page .lib-filters-top .lib-filter-group + .lib-filter-group { flex: 0 0 auto; }
+.acervo-page .lib-filter-group h2 { text-align: center; }
+
+/* Card: ações no canto inferior direito */
+.acervo-card .book-info { position: relative; padding-bottom: 64px; }
+.acervo-actions {
+  position: absolute;
+  right: 14px; bottom: 14px;
+  display: flex;
+  gap: 6px;
+}
+.acervo-btn {
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--hv-cream);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+.acervo-btn-delete { color: var(--hv-rose); }
+.acervo-btn:hover { background: rgba(245, 238, 218, 0.12); transform: scale(1.08); }
+.acervo-btn:focus-visible { outline: 2px solid var(--hv-cream); outline-offset: 2px; }
+
+.acervo-page .lib-empty[hidden] { display: none; }
+
+/* Acervo sem nenhum livro */
+.acervo-vazio {
+  margin: 60px auto;
+  text-align: center;
+  font-family: var(--hv-font-display);
+  font-weight: 600;
+  font-size: 1.8rem;
+  color: var(--hv-title);
+}

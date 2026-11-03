@@ -1,13 +1,4 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "trades",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "finalizadoEm", "order": "ASCENDING" }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

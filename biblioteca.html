@@ -2,86 +2,84 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>(function(){var t=localStorage.getItem('tdl_theme');if(t)t=t.replace(/"/g,'');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Biblioteca — Flowrish</title>
 <meta name="description" content="Explore centenas de livros disponíveis para troca. Filtre por gênero, cidade, estado de conservação e mais.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>📚</text></svg>">
+<meta name="theme-color" content="#4B4C33">
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/home.css">
 <link rel="stylesheet" href="css/pages/biblioteca.css">
 </head>
-<body>
+<body class="home-page library-page">
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
 <div id="navbar-root"></div>
 
-<header class="library-header">
-  <div class="container">
-    <h1 style="margin-bottom:6px;">Biblioteca</h1>
-    <p class="mb-0">Todos os livros disponíveis para troca na comunidade, em um só lugar.</p>
-  </div>
-</header>
+<main id="main" class="lib-main">
 
-<main class="container">
-  <div class="library-layout">
-    <aside class="card filters-panel" id="filtersPanel" aria-label="Filtros de busca">
-      <h3>Filtros</h3>
+  <div class="container lib-inner">
+    <h1 class="visually-hidden">Biblioteca</h1>
 
-      <div class="field">
-        <label for="fNome">Título ou autor</label>
-        <input class="input" type="search" id="fNome" placeholder="Buscar...">
-      </div>
+    <div class="lib-search-row">
+      <label class="lib-search">
+        <span class="visually-hidden">Buscar por título ou autor</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" id="fNome" autocomplete="off" placeholder="Digite o nome do autor ou do livro">
+      </label>
+      <button type="button" class="lib-filter-btn" id="toggleFilters" aria-label="Mostrar filtros" aria-expanded="false" aria-controls="filtersPanel">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5L3 4z"/></svg>
+      </button>
+    </div>
 
-      <div class="filter-group">
-        <span class="group-label">Gênero</span>
-        <div class="filter-chip-list" id="fGenero"></div>
-      </div>
-
-      <div class="filter-group">
-        <span class="group-label">Estado de conservação</span>
-        <div class="filter-chip-list" id="fConservacao"></div>
-      </div>
-
-      <div class="filter-group">
-        <span class="group-label">Origem</span>
-        <div class="filter-chip-list" id="fOrigem">
-          <button class="filter-chip" data-value="Nacional">Nacional</button>
-          <button class="filter-chip" data-value="Internacional">Internacional</button>
+    <section class="lib-filters" id="filtersPanel" aria-label="Filtros de busca" hidden>
+      <div class="lib-filters-top">
+        <div class="lib-filter-group lib-filter-genero">
+          <h2>Gênero</h2>
+          <div class="filter-chip-list" id="fGenero"></div>
         </div>
       </div>
-
-      <div class="field">
-        <label for="fEstado">Estado</label>
-        <select class="input" id="fEstado">
-          <option value="">Todos os estados</option>
-        </select>
-      </div>
-
-      <button class="btn btn-secondary btn-block btn-sm" id="clearFilters">Limpar filtros</button>
-    </aside>
-
-    <section>
-      <div class="results-toolbar">
-        <p class="results-count mb-0" id="resultsCount"></p>
-        <div class="flex gap-12 items-center">
-          <button class="btn btn-secondary btn-sm filters-toggle-mobile" id="toggleFiltersMobile">Filtros</button>
-          <select class="input" id="ordenacao" style="width:auto;" aria-label="Ordenar por">
-            <option value="recentes">Mais recentes</option>
-            <option value="populares">Mais populares</option>
-            <option value="az">Ordem alfabética dos títulos (A-Z)</option>
-            <option value="az-autor">Ordem alfabética dos autores (A-Z)</option>
+      <div class="lib-filters-bottom">
+        <div class="lib-filter-group">
+          <h2>Conservação</h2>
+          <div class="filter-chip-list" id="fConservacao"></div>
+        </div>
+        <div class="lib-filter-group">
+          <h2>Origem</h2>
+          <div class="filter-chip-list" id="fOrigem">
+            <button class="filter-chip" data-value="Internacional">Internacional</button>
+            <button class="filter-chip" data-value="Nacional">Nacional</button>
+          </div>
+        </div>
+        <div class="lib-filter-group">
+          <h2><label for="fEstado">Estado</label></h2>
+          <select class="lib-select" id="fEstado">
+            <option value="">Todos</option>
           </select>
         </div>
-      </div>
-      <div class="book-grid" id="bookGrid"></div>
-      <div class="empty-state" id="emptyState" style="display:none;">
-        <div class="emoji">📭</div>
-        <h3>Nenhum livro encontrado</h3>
-        <p>Tente ajustar os filtros de busca.</p>
+        <div class="lib-filter-group">
+          <h2><label for="ordenacao">Ordenar</label></h2>
+          <select class="lib-select" id="ordenacao">
+            <option value="recentes">Mais recentes</option>
+            <option value="populares">Mais populares</option>
+            <option value="az">Título (A-Z)</option>
+            <option value="az-autor">Autor (A-Z)</option>
+          </select>
+        </div>
+        <button type="button" class="lib-clear" id="clearFilters">Limpar</button>
       </div>
     </section>
+
+    <p class="lib-count" id="resultsCount" aria-live="polite"></p>
+    <div class="lib-grid hv-cards" id="bookGrid"></div>
+    <div class="empty-state lib-empty" id="emptyState" style="display:none;">
+      <h3>Nenhum livro encontrado</h3>
+      <p>Tente ajustar os filtros de busca.</p>
+    </div>
   </div>
 </main>
 

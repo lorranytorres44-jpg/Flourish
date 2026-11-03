@@ -2,73 +2,68 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Perfis: leitura pública (precisamos mostrar nome/foto/cidade de quem
-    // anuncia livros), mas só o próprio usuário edita seus dados.
+    function mudou() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    function souEu(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    // Perfis: leitura pública (nome/foto/cidade de quem anuncia). Só o próprio
+    // usuário cria, edita e apaga (ao excluir a conta).
     match /users/{userId} {
       allow read: if true;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if false;
+      allow create, update, delete: if souEu(userId);
+
+      // WhatsApp, no formato (11) 99999-9999: o botão "Trocar" da página do
+      // livro abre a conversa com o anunciante. Só quem está logado lê.
+      match /contato/{docId} {
+        allow read: if request.auth != null;
+        allow create, update: if souEu(userId) && docId == 'whatsapp' &&
+          request.resource.data.keys().hasOnly(['telefone']) &&
+          request.resource.data.telefone.matches('^\\([0-9]{2}\\) [0-9]{4,5}-[0-9]{4}$');
+        allow delete: if souEu(userId);
+      }
 
       match /favorites/{bookId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      match /readList/{bookId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      // Dados sensíveis (agência salva, com telefone e nome completo): ao
-      // contrário do perfil, só o dono lê.
-      match /private/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      // Notificações: só o dono da conta lê/atualiza, mas qualquer usuário
-      // autenticado pode criar uma notificação para avisar o outro lado de
-      // uma troca (proposta recebida, mensagem nova, etc.).
-      match /notifications/{notifId} {
-        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-        allow create: if request.auth != null;
+        allow read, write: if souEu(userId);
       }
     }
 
-    // Livros anunciados: leitura pública (é a biblioteca), só o dono cria/remove.
-    // Atualização: o dono pode editar qualquer campo; outros usuários autenticados
-    // só podem alterar o contador de curtidas (favoritar/desfavoritar).
+    // Avaliações de perfil: leitura pública. Quem está logado avalia outro
+    // usuário (nunca a si mesmo) com nota de 1 a 5 e comentário opcional; o id
+    // "avaliado_autor" garante uma avaliação por pessoa, que não é editada
+    // (o autor só a apaga, ao excluir a conta). O dono do perfil avaliado
+    // responde uma vez: só ele grava "resposta" e "respostaEm", e só se ainda
+    // não houver resposta.
+    match /ratings/{ratingId} {
+      function r() { return request.resource.data; }
+      allow read: if true;
+      allow create: if request.auth != null &&
+        r().autorId == request.auth.uid &&
+        r().avaliadoId != request.auth.uid &&
+        ratingId == r().avaliadoId + '_' + request.auth.uid &&
+        r().keys().hasOnly(['avaliadoId', 'autorId', 'nota', 'comentario', 'criadoEm']) &&
+        r().nota is int && r().nota >= 1 && r().nota <= 5 &&
+        r().comentario is string && r().comentario.size() <= 500 &&
+        exists(/databases/$(database)/documents/users/$(r().avaliadoId));
+      allow update: if request.auth != null &&
+        resource.data.avaliadoId == request.auth.uid &&
+        !('resposta' in resource.data) &&
+        mudou().hasOnly(['resposta', 'respostaEm']) &&
+        r().resposta is string && r().resposta.size() > 0 && r().resposta.size() <= 500 &&
+        r().respostaEm is string;
+      allow delete: if request.auth != null && resource.data.autorId == request.auth.uid;
+    }
+
+    // Livros anunciados: leitura pública (é a biblioteca), só o dono cria,
+    // edita e apaga. Outros usuários só mexem nas curtidas.
     match /books/{bookId} {
       allow read: if true;
       allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
       allow update: if request.auth != null && (
-        resource.data.ownerId == request.auth.uid ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['curtidas'])
+        (resource.data.ownerId == request.auth.uid && !mudou().hasAny(['ownerId'])) ||
+        mudou().hasOnly(['curtidas'])
       );
       allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
-    }
-
-    // Trocas: só as duas partes envolvidas leem/atualizam.
-    match /trades/{tradeId} {
-      allow read, update: if request.auth != null &&
-        (resource.data.requesterId == request.auth.uid || resource.data.ownerId == request.auth.uid);
-      allow create: if request.auth != null && request.resource.data.requesterId == request.auth.uid;
-      allow delete: if false;
-
-      match /messages/{messageId} {
-        allow read, create: if request.auth != null &&
-          (get(/databases/$(database)/documents/trades/$(tradeId)).data.requesterId == request.auth.uid ||
-           get(/databases/$(database)/documents/trades/$(tradeId)).data.ownerId == request.auth.uid);
-
-        // Mensagens só podem ser apagadas 14 dias depois da troca finalizada —
-        // dá tempo de reabrir a conversa se a entrega der problema, e nenhuma das
-        // partes consegue apagar o histórico (ex: endereço trocado) antes disso.
-        allow delete: if request.auth != null &&
-          get(/databases/$(database)/documents/trades/$(tradeId)).data.status in ['Entregue', 'Finalizada'] &&
-          (get(/databases/$(database)/documents/trades/$(tradeId)).data.requesterId == request.auth.uid ||
-           get(/databases/$(database)/documents/trades/$(tradeId)).data.ownerId == request.auth.uid) &&
-          request.time > get(/databases/$(database)/documents/trades/$(tradeId)).data.finalizadoEm + duration.value(14, 'd');
-      }
-    }
-
-    // Avaliações: leitura pública (mostradas no perfil/página do livro), autor cria a própria.
-    match /ratings/{ratingId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.autorId == request.auth.uid;
     }
   }
 }

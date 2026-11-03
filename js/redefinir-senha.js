@@ -1,9 +1,7 @@
 import { verifyResetCode, confirmReset } from './storage.js';
 import { showToast } from './toast.js';
-import { initTheme } from './theme.js';
 import { bindPasswordStrength, isStrongPassword } from './auth.js';
 
-initTheme();
 
 const params = new URLSearchParams(window.location.search);
 const mode = params.get('mode');
@@ -49,12 +47,12 @@ form.addEventListener('submit', async (e) => {
 
   if (novaSenha !== confirmarNovaSenha) {
     hint.style.display = 'block';
-    showToast('As senhas não coincidem', 'Digite a mesma senha nos dois campos.', 'error');
+    showToast('As senhas não coincidem', 'Digite a mesma senha nos dois campos.');
     return;
   }
 
   if (!isStrongPassword(novaSenha)) {
-    showToast('Senha fraca', 'Use pelo menos 10 caracteres com letra maiúscula, número e símbolo para uma senha forte.', 'error');
+    showToast('Senha fraca', 'Use pelo menos 10 caracteres com letra maiúscula, número e símbolo para uma senha forte.');
     return;
   }
 
@@ -62,10 +60,10 @@ form.addEventListener('submit', async (e) => {
   btn.disabled = true;
   try {
     await confirmReset(oobCode, novaSenha);
-    showToast('Senha redefinida!', 'Você já pode entrar com a nova senha.', 'success');
+    showToast('Senha redefinida!', 'Você já pode entrar com a nova senha.');
     setTimeout(() => window.location.href = 'login.html', 900);
   } catch (err) {
-    showToast('Erro ao redefinir senha', mensagemErro(err), 'error');
+    showToast('Erro ao redefinir senha', mensagemErro(err));
     btn.disabled = false;
   }
 });

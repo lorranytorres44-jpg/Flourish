@@ -1,73 +1,62 @@
-import { getSession, logout, getPoints, getNotifications, unreadCount, markNotificationsRead } from './storage.js';
+import { getSession, logout } from './storage.js';
 import { openModal } from './modal.js';
 
 const NAV_LINKS = [
   { href: 'index.html', label: 'Início' },
   { href: 'biblioteca.html', label: 'Biblioteca' },
-  { href: 'cadastrar-livro.html', label: 'Anunciar Livro' },
-  { href: 'dashboard.html', label: 'Minha Área' },
+  { href: 'cadastrar-livro.html', label: 'Anunciar Livro', shortLabel: 'Anunciar', requiresLogin: true },
+  // Livros anunciados pelo usuário, com editar e excluir.
+  { href: 'acervo.html', label: 'Meu acervo', requiresLogin: true },
 ];
 
-function timeAgo(iso) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'agora';
-  if (diff < 3600) return `${Math.floor(diff / 60)} min atrás`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} h atrás`;
-  return `${Math.floor(diff / 86400)} d atrás`;
-}
+// Logo: o "o" de Flowrish vira uma flor.
+const FLOWER_LOGO = `Fl<img class="logo-flower" src="assets/flor-logo.svg" alt="">wrish`;
 
+// Barra do topo de todas as páginas: busca à esquerda, sem "Início" (o logo
+// leva à home), rótulos curtos e logo com flor.
 export function renderNavbar(activePage = '') {
   const root = document.getElementById('navbar-root');
   if (!root) return;
   const session = getSession();
-  const points = getPoints();
 
-  const linksHTML = NAV_LINKS.map(l => `<a href="${l.href}" class="${activePage === l.href ? 'active' : ''}">${l.label}</a>`).join('');
+  // Sem login o menu aparece inteiro, mas os links de quem está logado ficam
+  // bloqueados: clicar abre o aviso de login em vez de abrir a página.
+  const visibleLinks = NAV_LINKS;
+  const bloqueado = (l) => l.requiresLogin && !session;
+  const lockAttrs = (l) => bloqueado(l) ? ' data-requires-login title="Entre na sua conta para acessar"' : '';
+  const linksHTML = visibleLinks
+    .filter(l => l.href !== 'index.html')
+    .map(l => `<a href="${l.href}" class="${activePage === l.href ? 'active' : ''}"${lockAttrs(l)}>${l.shortLabel || l.label}</a>`).join('');
 
   const authArea = session
     ? `
-      <div class="user-menu">
-        <button class="btn-icon notif-btn" aria-label="Notificações" id="notifBtn">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
-          ${unreadCount() > 0 ? '<span class="notif-dot"></span>' : ''}
-        </button>
-        <div class="notif-panel" id="notifPanel"></div>
-      </div>
-      <span class="points-pill" title="Seus pontos">★ ${points ?? 0}</span>
       <div class="user-menu">
         <button class="user-avatar-btn" id="userMenuBtn">
           <img src="${session.foto}" alt="" width="32" height="32">
           <span>${session.nome.split(' ')[0]}</span>
         </button>
-        <div class="dropdown-menu" id="userDropdown">
-          <a href="perfil.html">Meu Perfil</a>
-          <a href="dashboard.html">Minha Área</a>
-          <a href="cadastrar-livro.html">Anunciar Livro</a>
-          <div class="dropdown-divider"></div>
+        <div class="dropdown-menu user-dropdown" id="userDropdown">
+          <a href="perfil.html">Perfil</a>
+          <a href="perfil.html#config">Configurações</a>
           <button id="logoutBtn">Sair</button>
         </div>
       </div>
     `
-    : `
-      <a href="login.html" class="btn btn-ghost btn-sm">Entrar</a>
-      <a href="cadastro.html" class="btn btn-primary btn-sm">Cadastrar</a>
-    `;
+    // Sem login: só "Entrar" (o cadastro fica acessível pela tela de login).
+    : `<a href="login.html" class="btn btn-sm nav-login">Entrar</a>`;
 
   root.innerHTML = `
-    <header class="navbar">
+    <header class="navbar navbar--home">
       <div class="navbar-inner">
-        <a href="index.html" class="logo">
-          <span class="logo-mark" aria-hidden="true">
-            <img src="assets/livro-logo.png" width="20" height="20" alt="">
-          </span>
-          <span class="logo-text">Flowrish</span>
+        <a href="index.html" class="logo" aria-label="Flowrish — início">
+          <span class="logo-text">${FLOWER_LOGO}</span>
         </a>
         <nav class="nav-links" aria-label="Navegação principal">${linksHTML}</nav>
         <form class="nav-search" role="search" id="navSearchForm">
           <span class="icon" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           </span>
-          <input type="search" id="navSearchInput" placeholder="Buscar livros, autores..." aria-label="Buscar livros">
+          <input type="search" id="navSearchInput" autocomplete="off" placeholder="Autor ou livro" aria-label="Buscar livros">
         </form>
         <div class="nav-actions">
           ${authArea}
@@ -84,10 +73,10 @@ export function renderNavbar(activePage = '') {
           <button class="btn-icon" id="closeDrawer" aria-label="Fechar menu">✕</button>
         </div>
         <form class="nav-search mobile-search" id="mobileSearchForm">
-          <span class="icon" aria-hidden="true">🔎</span>
+          <span class="icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
           <input type="search" id="mobileSearchInput" placeholder="Buscar livros, autores..." aria-label="Buscar livros">
         </form>
-        ${NAV_LINKS.map(l => `<a href="${l.href}">${l.label}</a>`).join('')}
+        ${visibleLinks.map(l => `<a href="${l.href}"${lockAttrs(l)}>${l.label}</a>`).join('')}
         <div class="dropdown-divider"></div>
         ${session ? `<a href="perfil.html">Meu Perfil</a><button id="mobileLogout">Sair</button>` : `<a href="login.html">Entrar</a><a href="cadastro.html">Cadastrar</a>`}
       </div>
@@ -99,6 +88,12 @@ export function renderNavbar(activePage = '') {
   navToggle?.addEventListener('click', () => drawer.classList.add('open'));
   document.getElementById('closeDrawer')?.addEventListener('click', () => drawer.classList.remove('open'));
   drawer?.addEventListener('click', (e) => { if (e.target === drawer) drawer.classList.remove('open'); });
+
+  root.querySelectorAll('[data-requires-login]').forEach(link => link.addEventListener('click', (e) => {
+    e.preventDefault();
+    drawer?.classList.remove('open');
+    requireLoginModal();
+  }));
 
   const doSearch = (value) => {
     if (!value.trim()) return;
@@ -121,58 +116,20 @@ export function renderNavbar(activePage = '') {
   userBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
     userDropdown.classList.toggle('open');
-    document.getElementById('notifPanel')?.classList.remove('open');
-  });
-
-  const notifBtn = document.getElementById('notifBtn');
-  const notifPanel = document.getElementById('notifPanel');
-  notifBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (!notifPanel.classList.contains('open')) {
-      renderNotifPanel(notifPanel);
-      markNotificationsRead();
-      notifBtn.querySelector('.notif-dot')?.remove();
-    }
-    notifPanel.classList.toggle('open');
-    userDropdown?.classList.remove('open');
   });
 
   document.addEventListener('click', () => {
     userDropdown?.classList.remove('open');
-    notifPanel?.classList.remove('open');
   });
 }
 
-function renderNotifPanel(panel) {
-  const notifications = getNotifications();
-  panel.innerHTML = `
-    <div class="notif-panel-head">Notificações</div>
-    ${notifications.length === 0
-      ? '<div class="empty-state" style="padding:24px;"><p>Nenhuma notificação ainda.</p></div>'
-      : notifications.slice(0, 10).map(n => `
-        <div class="notif-item ${n.lida ? 'read' : ''}">
-          <span class="dot" aria-hidden="true"></span>
-          <div>
-            <strong style="font-size:0.88rem;">${n.titulo}</strong>
-            <div style="font-size:0.83rem;color:var(--text-muted);">${n.texto}</div>
-            <div class="time">${timeAgo(n.criadoEm)}</div>
-          </div>
-        </div>
-      `).join('')}
-  `;
-}
-
-export function requireLoginModal(message = 'Você precisa estar logado para acessar esta área.') {
+// dismissible: aberto por um clique no menu — a pessoa continua na página,
+// então o segundo botão só fecha o aviso (em vez de "Voltar ao início").
+export function requireLoginModal() {
   openModal(`
-    <div class="modal-header">
-      <h3 id="loginRequiredTitle">Login necessário</h3>
-    </div>
-    <p>${message}</p>
-    <div style="display:flex;gap:12px;margin-top:20px;">
-      <a href="login.html" class="btn btn-primary btn-block">Entrar</a>
-      <a href="index.html" class="btn btn-ghost btn-block">Voltar ao início</a>
-    </div>
-  `, { labelledBy: 'loginRequiredTitle' });
+    <h3 id="loginRequiredTitle" class="login-aviso-titulo">O login é necessário para acessar essa área!</h3>
+    <a href="login.html" class="login-aviso-entrar">Entrar</a>
+  `, { labelledBy: 'loginRequiredTitle', className: 'login-aviso' });
 }
 
 export function renderFooter() {
@@ -183,36 +140,15 @@ export function renderFooter() {
       <div class="container">
         <div class="footer-grid">
           <div class="footer-col">
-            <div class="footer-logo">
-              <span class="logo-mark" aria-hidden="true" style="background:rgba(255,255,255,0.15);">
-                <img src="assets/livro-logo.png" width="20" height="20" alt="">
-              </span>
-              Flowrish
-            </div>
-            <p>Uma comunidade de leitores que acredita que todo livro merece ser lido mais de uma vez, por mais de uma pessoa.</p>
-            <div class="footer-social">
-              <a href="#" aria-label="Instagram"><img src="assets/instagram.png" width="20" height="20" alt=""></a>
-              <a href="#" aria-label="Facebook"><img src="assets/facebook.png" width="20" height="20" alt=""></a>
-              <a href="#" aria-label="Twitter/X"><img src="assets/twitter.png" width="20" height="20" alt=""></a>
-            </div>
+            <div class="footer-logo"><span aria-hidden="true">${FLOWER_LOGO}</span><span class="visually-hidden">Flowrish</span></div>
           </div>
-          <div class="footer-col">
-            <h4>Plataforma</h4>
-            <a href="biblioteca.html">Biblioteca</a>
-            <a href="cadastrar-livro.html">Anunciar livro</a>
-            <a href="dashboard.html">Minha área</a>
-            <a href="index.html#como-funciona">Como funciona</a>
-            <a href="index.html#beneficios">Benefícios</a>
-          </div>
-          <div class="footer-col">
-            <h4>Legal</h4>
+          <div class="footer-col footer-links-inline">
             <a href="ajuda.html">Central de ajuda</a>
-            <a href="termos.html">Termos de uso e política de privacidade</a>
+            <a href="assets/termos.pdf" target="_blank" rel="noopener">Termos de uso e política de privacidade</a>
           </div>
         </div>
         <div class="footer-bottom">
-          <span>© ${new Date().getFullYear()} Flowrish. Todos os direitos reservados.</span>
-          <span>Feito com 💚 para leitores.</span>
+          <span>© ${new Date().getFullYear()} Flowrish</span>
         </div>
       </div>
     </footer>

@@ -1,0 +1,32 @@
+/* Central de ajuda (ajuda.html) */
+.ajuda-page {
+  display: flex; justify-content: center;
+  padding: calc(var(--header-h) + 48px) 16px 64px;
+}
+.ajuda-card {
+  width: 100%; max-width: 600px; padding: 30px 34px 32px; border-radius: 30px;
+  background: #4B4C33; color: #F5EEDA; font-family: 'DM Sans', sans-serif;
+}
+.ajuda-titulo { margin: 0 0 16px; text-align: center; color: #F5EEDA; font-family: 'Oswald', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+.ajuda-texto { margin: 0 0 24px; color: #F5EEDA; font-size: 1.05rem; line-height: 1.5; }
+.ajuda-label { display: block; margin: 0 0 8px 14px; color: #F5EEDA; font-family: 'Oswald', sans-serif; font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+.ajuda-input {
+  display: block; width: 100%; height: 40px; margin: 0 0 22px; padding: 0 18px; border: none; border-radius: 999px;
+  background: #85836A; color: #F5EEDA; font: inherit; font-size: 1rem;
+}
+.ajuda-input:focus { outline: 2px solid #C97B96; outline-offset: 2px; }
+.ajuda-mensagem { height: 150px; margin-bottom: 26px; padding: 14px 20px; border-radius: 26px; resize: vertical; line-height: 1.5; }
+.ajuda-enviar {
+  display: block; width: min(300px, 100%); margin: 0 auto; padding: 7px 20px; border: none; border-radius: 999px;
+  background: #C97B96; color: #F5EEDA; font: inherit; font-size: 1.1rem; font-weight: 700; line-height: 1.2; cursor: pointer;
+}
+.ajuda-enviar:hover { background: #B96A86; }
+.ajuda-enviar:disabled { opacity: 0.6; cursor: wait; }
+
+@media (max-width: 560px) {
+  .ajuda-page { padding-top: calc(var(--header-h) + 28px); }
+  .ajuda-card { padding: 24px 20px; border-radius: 24px; }
+  .ajuda-titulo { font-size: 1.4rem; }
+  .ajuda-texto { font-size: 1rem; }
+  .ajuda-mensagem { height: 130px; border-radius: 22px; }
+}

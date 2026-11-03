@@ -1,67 +1,302 @@
-.book-detail {
-  padding: calc(var(--header-h) + 32px) 0 72px;
+/* ============================================
+   Página do livro — mesmo visual "flor" da home (oliva, creme e rosa)
+   Reaproveita de home.css: variáveis --hv-*, navbar--home e o fundo padrão.
+   ============================================ */
+.book-page {
+  --bk-sand: #D3CBA8;
+  --bk-cream: #F6EED9;
 }
-.breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
-.breadcrumb a { color: var(--text-muted); }
-.detail-grid {
+
+.bk-main {
+  position: relative;
+  padding: calc(var(--header-h) + 44px) 0 120px;
+  font-family: var(--hv-font-body);
+  color: var(--hv-olive);
+}
+.bk-inner { max-width: 1120px; }
+
+/* ---------- Topo: capa + informações ---------- */
+.bk-top {
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 40px;
+  grid-template-columns: 300px 1fr;
+  gap: 28px;
   align-items: start;
 }
-.gallery-main {
-  aspect-ratio: 3/4;
-  border-radius: var(--radius-md);
+.bk-cover {
+  position: relative;
+  aspect-ratio: 345 / 600;
+  border-radius: 28px;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
-  margin-bottom: 12px;
+  background: #C8EAFB;
+  box-shadow: 0 10px 30px rgba(75, 76, 51, 0.15);
 }
-.gallery-main img { width: 100%; height: 100%; object-fit: cover; }
-.gallery-thumbs { display: flex; gap: 10px; }
-.gallery-thumbs img {
-  width: 64px; height: 86px; object-fit: cover; border-radius: var(--radius-sm);
-  cursor: pointer; border: 2px solid transparent;
-}
-.gallery-thumbs img.active { border-color: var(--accent-strong); }
-.detail-actions-sticky { position: sticky; top: calc(var(--header-h) + 16px); }
-
-.detail-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.detail-badges { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 20px; }
-.owner-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 18px; margin: 24px 0;
-}
-.owner-card img { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; }
-.owner-card .stars { color: var(--warning); }
-.action-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
-.action-buttons .btn { flex: 1; min-width: 160px; }
-.detail-tabs-content { padding: 24px 0; }
-.rating-summary { display: flex; gap: 32px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
-.rating-big { text-align: center; }
-.rating-big .num { font-family: var(--font-heading); font-size: 3rem; font-weight: 700; line-height: 1; }
-.rating-crit { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
-.review-item { padding: 18px 0; border-bottom: 1px solid var(--border); }
-.review-item:last-child { border-bottom: none; }
-.review-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-.review-head img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-
-.trade-option {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 14px;
+.bk-cover img { width: 100%; height: 100%; object-fit: cover; }
+.bk-fav {
+  position: absolute;
+  top: 18px; right: 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--hv-rose);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  transition: transform var(--transition-fast);
 }
-.trade-option:hover { border-color: var(--accent-strong); }
-.trade-option.selected { border-color: var(--accent-strong); background: var(--sage-light); }
-.trade-option h4 { margin-bottom: 6px; }
-.my-books-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 14px 0; }
-.my-book-pick { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 8px; cursor: pointer; text-align: center; font-size: 0.78rem; }
-.my-book-pick img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
-.my-book-pick.selected { border-color: var(--accent-strong); background: var(--sage-light); }
+.bk-fav:hover { transform: scale(1.08); }
+.bk-fav svg { width: 36px; height: 36px; display: block; fill: rgba(255, 255, 255, 0.85); stroke: var(--hv-rose); stroke-width: 2; }
+.bk-fav.active svg { fill: var(--hv-rose); }
 
+.bk-thumbs { display: flex; gap: 10px; margin-top: 12px; }
+.bk-thumbs button {
+  width: 58px; height: 78px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+}
+.bk-thumbs button.active { border-color: var(--hv-olive); }
+.bk-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+
+.bk-info { padding-top: 16px; }
+.bk-title {
+  margin: 0;
+  font-family: var(--hv-font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  line-height: 1.1;
+  color: var(--hv-olive);
+}
+.bk-author {
+  margin: 4px 0 0 6px;
+  font-family: var(--hv-font-display);
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: var(--hv-olive);
+}
+.bk-tags { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 18px 0 0; }
+.bk-tag {
+  padding: 2px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--bk-sand);
+  font-size: 0.9rem;
+  color: var(--hv-olive);
+}
+.bk-tag--pink { background: var(--hv-status); }
+.bk-synopsis { margin: 36px 0 0; font-size: 1.05rem; line-height: 1.5; color: var(--hv-olive); }
+.bk-details {
+  margin: 28px 0 0;
+  padding-left: 24px;
+  list-style: disc;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--hv-olive);
+}
+
+/* ---------- Versão do dono (aberta pelo "Meu acervo"): editar e excluir ---------- */
+.bk-owner-actions { display: flex; gap: 10px; margin: 28px 0 0; }
+/* Pílulas oliva, com o ícone em creme */
+.bk-owner-btn {
+  width: 58px; height: 42px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: #989769;
+  color: var(--hv-cream);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+.bk-owner-btn svg { width: 26px; height: 26px; }
+.bk-owner-btn:hover { background: #85845A; transform: translateY(-2px); }
+.bk-owner-btn:focus-visible { outline: 2px solid var(--hv-olive); outline-offset: 2px; }
+
+/* ---------- Embaixo: botão de troca (WhatsApp) + anunciante ---------- */
+.bk-bottom { margin: 44px 0 0 328px; }
+.bk-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 44px; }
+.bk-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 250px;
+  padding: 8px 30px 8px 22px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--bk-cream);
+  font-family: var(--hv-font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  color: var(--hv-olive);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.bk-action:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(75, 76, 51, 0.15); }
+.bk-action:disabled { opacity: 0.7; cursor: wait; }
+/* Botão "Trocar pelo WhatsApp" (abre a escolha do livro oferecido) */
+.bk-trocar {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 30px 12px; border: none; border-radius: 26px;
+  background: #9C9A6B; color: #F6EED9; font-family: 'DM Sans', sans-serif; font-weight: 700; line-height: 1.1;
+  cursor: pointer; transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+.bk-trocar:hover { background: #8E8C5E; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(75, 76, 51, 0.18); }
+.bk-trocar:focus-visible { outline: 2px solid var(--hv-olive); outline-offset: 3px; }
+.bk-trocar:disabled { opacity: 0.7; cursor: wait; }
+.bk-trocar-topo { font-size: 1.3rem; opacity: 0.9; }
+.bk-trocar-marca { display: inline-flex; align-items: center; gap: 8px; font-size: 2.2rem; letter-spacing: -0.01em; }
+.bk-trocar-marca svg { width: 1.1em; height: 1.1em; flex: none; }
+
+.bk-owner {
+  padding: 16px 30px 44px;
+  border-radius: 34px;
+  background: var(--hv-olive);
+  color: var(--bk-cream);
+}
+.bk-owner-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+/* Linha divisória recuada dos dois lados, como no design */
+.bk-owner-head::after {
+  content: "";
+  position: absolute;
+  left: 50px; right: 32px; bottom: 0;
+  border-bottom: 2px solid rgba(245, 238, 218, 0.6);
+}
+.bk-owner-link { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+.bk-owner-link img {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 3px solid var(--hv-rose);
+  background: var(--hv-rose);
+  object-fit: cover;
+}
+.bk-owner-link h2 {
+  margin: 0;
+  font-family: var(--hv-font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+  color: var(--bk-cream);
+}
+.bk-owner-link:hover h2 { text-decoration: underline; }
+.bk-owner-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--hv-font-display);
+  font-size: 1.25rem;
+  color: var(--bk-cream);
+}
+.bk-owner-subrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 20px; }
+.bk-owner-sub {
+  margin: 0;
+  font-family: var(--hv-font-display);
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: var(--bk-cream);
+}
+.bk-avaliar {
+  padding: 5px 18px; border: none; border-radius: var(--radius-pill);
+  background: #C97B96; color: var(--bk-cream);
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+}
+.bk-avaliar:hover { background: #B96A86; }
+
+/* Modal "Qual livro você oferece em troca?" (acervo de quem pede) */
+.modal.proposta-modal {
+  position: relative; max-width: 520px; padding: 30px 30px 26px; border-radius: 28px;
+  background: #4B4C33; color: #F5EEDA; font-family: 'DM Sans', sans-serif;
+}
+.proposta-fechar {
+  position: absolute; top: 18px; right: 20px; padding: 4px; border: none; background: none;
+  color: #F5EEDA; font-size: 1.2rem; line-height: 1; cursor: pointer;
+}
+.proposta-fechar:hover { opacity: 0.75; }
+.proposta-titulo { margin: 0 30px 10px 0; color: #F5EEDA; font-family: 'Oswald', sans-serif; font-size: 1.45rem; font-weight: 700; line-height: 1.2; }
+.proposta-texto { margin: 0 0 18px; color: #F5EEDA; font-size: 1rem; line-height: 1.5; }
+.proposta-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 50vh; overflow-y: auto; }
+.proposta-livro {
+  display: flex; align-items: center; gap: 14px; padding: 8px 16px 8px 8px; border-radius: 18px;
+  background: #85836A; color: #F5EEDA; text-decoration: none; transition: background var(--transition-fast);
+}
+.proposta-livro:hover { background: #C97B96; color: #F5EEDA; }
+.proposta-livro img { flex: none; width: 46px; height: 64px; border-radius: 8px; object-fit: cover; background: #F5EEDA; }
+.proposta-livro span { display: flex; flex-direction: column; min-width: 0; }
+.proposta-livro strong { font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 1.1rem; line-height: 1.25; overflow-wrap: anywhere; }
+.proposta-livro small { font-size: 0.9rem; opacity: 0.9; }
+.proposta-anunciar {
+  display: block; padding: 7px 20px; border-radius: 999px; background: #C97B96; color: #F5EEDA;
+  text-align: center; font-size: 1.1rem; font-weight: 700; text-decoration: none;
+}
+.proposta-anunciar:hover { background: #B96A86; color: #F5EEDA; }
+@media (max-width: 560px) {
+  .modal.proposta-modal { padding: 26px 20px 22px; border-radius: 24px; }
+  .proposta-titulo { font-size: 1.25rem; }
+}
+
+/* Modal de avaliação do perfil: estrelas e comentário (reviews.js) */
+.modal.avaliacao-modal {
+  position: relative; max-width: 440px; padding: 30px 30px 26px; border-radius: 34px;
+  background: #9A986A; color: #F5EEDA; font-family: 'DM Sans', sans-serif;
+}
+.avaliacao-fechar {
+  position: absolute; top: 18px; right: 20px; padding: 4px; border: none; background: none;
+  color: #F5EEDA; font-size: 1.2rem; line-height: 1; cursor: pointer;
+}
+.avaliacao-fechar:hover { opacity: 0.75; }
+.avaliacao-titulo { margin: 0 28px 4px; text-align: center; color: #F5EEDA; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.3rem; line-height: 1.25; }
+.avaliacao-estrelas { display: flex; justify-content: center; gap: 4px; margin: 16px 0 24px; }
+.avaliacao-estrelas button { width: 40px; height: 40px; padding: 0; border: none; background: none; cursor: pointer; }
+.avaliacao-estrelas svg { width: 100%; height: 100%; display: block; fill: none; stroke: #F7C531; stroke-width: 1.4; transition: fill 0.12s; }
+.avaliacao-estrelas button.cheia svg { fill: #F7C531; }
+.avaliacao-estrelas button:focus-visible { outline: 2px solid #F5EEDA; border-radius: 6px; }
+.avaliacao-label { display: block; margin: 0 0 10px 6px; color: #F5EEDA; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 1.2rem; }
+.avaliacao-comentario {
+  display: block; width: 100%; height: 130px; padding: 14px 18px; border: none; border-radius: 30px; resize: vertical;
+  background: #D8D4B6; color: #4B4C33; font: inherit; font-size: 1rem; line-height: 1.45;
+}
+.avaliacao-comentario::placeholder { color: #4B4C33; opacity: 0.85; }
+.avaliacao-comentario:focus { outline: 2px solid #E3B9BC; outline-offset: 2px; }
+.avaliacao-enviar {
+  display: block; width: 100%; margin-top: 20px; padding: 7px 20px; border: none; border-radius: 999px; cursor: pointer;
+  background: #E3B9BC; color: #4B4C33; font: inherit; font-weight: 700; font-size: 1.05rem;
+}
+.avaliacao-enviar:hover { background: #D9A6AA; }
+.avaliacao-enviar:disabled { opacity: 0.6; cursor: wait; }
+@media (max-width: 560px) {
+  .modal.avaliacao-modal { padding: 26px 20px 22px; border-radius: 26px; }
+}
+
+.bk-empty { padding: 60px 0; color: var(--hv-olive); }
+.bk-empty .bk-action { display: inline-flex; min-width: 0; font-size: 1.3rem; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1100px) {
+  .bk-bottom { margin-left: 0; }
+}
 @media (max-width: 860px) {
-  .detail-grid { grid-template-columns: 1fr; }
-  .detail-actions-sticky { position: static; }
+  .bk-main { padding-top: calc(var(--header-h) + 24px); }
+  .bk-top { grid-template-columns: 1fr; }
+  .bk-gallery { max-width: 300px; width: 100%; margin: 0 auto; }
+  .bk-cover { aspect-ratio: 3 / 4; }
+  .bk-info { padding-top: 0; }
+  .bk-author { margin-left: 0; font-size: 1.3rem; }
+  .bk-synopsis { margin-top: 24px; font-size: 1rem; }
+  .bk-details { margin-top: 20px; font-size: 0.95rem; }
+  .bk-action { min-width: 0; width: 100%; gap: 18px; font-size: 1.2rem; }
+}
+@media (max-width: 560px) {
+  .bk-owner { padding: 16px 18px 28px; border-radius: 24px; }
+  .bk-owner-head { flex-wrap: wrap; }
+  .bk-owner-head::after { left: 0; right: 0; }
+  .bk-owner-link h2 { font-size: 1.25rem; }
 }

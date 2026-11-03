@@ -1,12 +1,10 @@
 import { GENEROS, ESTADOS_CONSERVACAO } from './data.js';
-import { addMyBook, isLoggedIn, authReady } from './storage.js';
+import { addMyBook, updateMyBook, getAnyBookById, getSession, isLoggedIn, authReady } from './storage.js';
 import { renderNavbar, renderFooter, requireLoginModal } from './navbar.js';
-import { initTheme } from './theme.js';
 import { showToast } from './toast.js';
 import { compressImage } from './image-utils.js';
 import { googleBooksApiKey } from './firebase-config.js';
 
-initTheme();
 window.addEventListener('unload', () => {});
 window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
 await authReady;
@@ -14,7 +12,11 @@ renderNavbar('cadastrar-livro.html');
 renderFooter();
 
 if (!isLoggedIn()) {
-  requireLoginModal('Faça login para anunciar um livro.');
+  requireLoginModal();
+} else if (!getSession().telefone) {
+  // Sem WhatsApp ninguém consegue combinar a troca: pede antes de anunciar.
+  showToast('Informe seu WhatsApp', 'Ele é necessário para anunciar. Você será levado às configurações do perfil.');
+  setTimeout(() => { window.location.href = 'perfil.html#config'; }, 1800);
 }
 
 // Popular selects
@@ -57,15 +59,9 @@ document.addEventListener('click', () => {
 const conservacaoSelect = document.getElementById('estadoConservacao');
 ESTADOS_CONSERVACAO.forEach(c => conservacaoSelect.appendChild(new Option(c, c)));
 
-// Alternância manual / ISBN
-const isbnSection = document.getElementById('isbnSection');
-document.querySelectorAll('.mode-switch button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-switch button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    isbnSection.style.display = btn.dataset.mode === 'isbn' ? 'block' : 'none';
-  });
-});
+// Textareas crescem conforme o conteúdo, mantendo o visual de campo em pílula
+function ajustarAltura(t) { t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px`; }
+document.querySelectorAll('.anunciar-textarea').forEach(t => t.addEventListener('input', () => ajustarAltura(t)));
 
 let capaEncontrada = '';
 
@@ -111,7 +107,7 @@ semDanificacoesCheckbox.addEventListener('change', () => {
 document.getElementById('removeCapaBtn').addEventListener('click', () => {
   capaEncontrada = '';
   atualizarPreview();
-  showToast('Capa removida', 'Adicione fotos reais do livro para usar como capa.', 'info', 2500);
+  showToast('Capa removida', 'Adicione fotos reais do livro para usar como capa.');
 });
 
 // Normaliza a resposta da Open Library para um formato comum
@@ -183,13 +179,14 @@ document.getElementById('isbnSearchBtn').addEventListener('click', async () => {
     document.getElementById('ano').value = info.ano;
     document.getElementById('paginas').value = info.paginas;
     document.getElementById('sinopse').value = info.sinopse;
+    ajustarAltura(document.getElementById('sinopse'));
 
     capaEncontrada = info.capa || '';
     atualizarPreview();
     document.getElementById('bookPreview').classList.add('show');
 
     status.textContent = 'Informações preenchidas automaticamente! Você pode editar qualquer campo abaixo antes de publicar.';
-    showToast('Livro encontrado!', 'Confira os dados preenchidos automaticamente.', 'success');
+    showToast('Livro encontrado!', 'Confira os dados preenchidos automaticamente.');
   } catch (err) {
     status.textContent = 'Erro ao buscar o livro. Verifique sua conexão ou tente o cadastro manual.';
   } finally {
@@ -225,6 +222,44 @@ function renderPhotoGrid() {
   photoGrid.appendChild(addSlot);
 }
 
+// Edição (lápis do "Meu acervo"): cadastrar-livro.html?editar=<id> abre o
+// formulário preenchido com o livro, e o botão vira "Republicar".
+const editarId = new URLSearchParams(window.location.search).get('editar');
+let livroEditado = null;
+if (editarId && isLoggedIn()) {
+  livroEditado = await getAnyBookById(editarId).catch(() => null);
+  if (!livroEditado || livroEditado.ownerId !== getSession().id) {
+    showToast('Livro não encontrado', 'Só é possível editar livros do seu acervo.');
+    setTimeout(() => { window.location.href = 'acervo.html'; }, 1500);
+    livroEditado = null;
+  } else {
+    preencherFormulario(livroEditado);
+  }
+}
+
+function preencherFormulario(book) {
+  document.title = 'Editar livro — Flowrish';
+  const campos = { titulo: book.titulo, autor: book.autor, editora: book.editora, ano: book.ano, paginas: book.paginas, sinopse: book.sinopse, tempoUso: book.tempoUso, observacoes: book.observacoes, nacionalidade: book.nacionalidade, estadoConservacao: book.estadoConservacao };
+  Object.entries(campos).forEach(([id, valor]) => { document.getElementById(id).value = valor ?? ''; });
+  edicaoInput.value = book.edicao ? `${book.edicao}ª edição` : '';
+  book.generos.forEach(g => generosSelecionados.add(g));
+  generoPanel.querySelectorAll('input').forEach(input => { input.checked = generosSelecionados.has(input.value); });
+  atualizarGeneroTrigger();
+  semDanificacoesCheckbox.checked = !!book.semDanificacoes;
+  observacoesInput.disabled = semDanificacoesCheckbox.checked;
+  document.querySelectorAll('.anunciar-textarea').forEach(ajustarAltura);
+
+  // A capa vinda do ISBN fica fora da lista de fotos (ver o envio abaixo).
+  photos.push(...(book.fotos || []).filter(f => f && !f.includes('placehold.co')));
+  if (book.capa && book.capa !== photos[0] && !book.capa.includes('placehold.co')) {
+    capaEncontrada = book.capa;
+    atualizarPreview();
+    document.getElementById('bookPreview').classList.add('show');
+  }
+  renderPhotoGrid();
+  document.querySelector('#bookForm button[type=submit]').textContent = 'Republicar';
+}
+
 // Submissão do formulário
 document.getElementById('bookForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -244,37 +279,42 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
     semDanificacoes: semDanificacoesCheckbox.checked,
     capa: capaEncontrada || photos[0] || 'https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa',
     fotos: photos.length ? photos : [capaEncontrada || 'https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'],
-    pontosNecessarios: 3,
   };
 
-  if (!book.titulo || !book.autor || !book.generos.length || !book.nacionalidade || !book.estadoConservacao) {
-    showToast('Preencha os campos obrigatórios', '', 'error');
+  if (!book.titulo || !book.autor || !book.generos.length || !book.nacionalidade || !book.sinopse || !book.estadoConservacao) {
+    showToast('Preencha os campos obrigatórios');
     return;
   }
 
   if ((book.editora || book.edicao || book.ano) && (!book.editora || !book.edicao || !book.ano)) {
-    showToast('Preencha editora, edição e ano da edição', 'Ao informar um desses campos, os outros dois também passam a ser obrigatórios.', 'error');
+    showToast('Preencha editora, edição e ano da edição', 'Ao informar um desses campos, os outros dois também passam a ser obrigatórios.');
     return;
   }
 
   if (!book.observacoes && !book.semDanificacoes) {
-    showToast('Descreva o estado do livro', 'Preencha as observações ou marque "Sem danificações relevantes".', 'error');
+    showToast('Descreva o estado do livro', 'Preencha as observações ou marque "Sem danificações relevantes".');
     return;
   }
 
   if (!photos.length) {
-    showToast('Adicione ao menos uma foto', 'Fotos reais do livro são obrigatórias para anunciar.', 'error');
+    showToast('Adicione ao menos uma foto', 'Fotos reais do livro são obrigatórias para anunciar.');
     return;
   }
 
   const submitBtn = e.target.querySelector('button[type=submit]');
   submitBtn.disabled = true;
   try {
+    if (livroEditado) {
+      await updateMyBook(livroEditado.id, book);
+      showToast('Livro republicado!', 'As alterações já aparecem na Biblioteca.');
+      setTimeout(() => window.location.href = 'acervo.html', 900);
+      return;
+    }
     const saved = await addMyBook(book);
-    showToast('Livro publicado!', 'Você ganhou +1 ponto por anunciar um livro.', 'success');
+    showToast('Livro publicado!', 'Quem tiver interesse vai falar com você pelo WhatsApp.');
     setTimeout(() => window.location.href = `livro.html?id=${saved.id}`, 900);
   } catch (err) {
-    showToast('Erro ao publicar', 'O livro pode ter fotos grandes demais — tente com menos fotos.', 'error');
+    showToast('Erro ao publicar', 'O livro pode ter fotos grandes demais — tente com menos fotos.');
     submitBtn.disabled = false;
   }
 });

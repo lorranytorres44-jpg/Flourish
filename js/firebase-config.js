@@ -12,3 +12,4 @@ export const firebaseConfig = {
 // Chave da Google Books API (Google Cloud Console → APIs e Serviços → Credenciais)
 // Usada para buscar título/autor/capa/sinopse a partir do ISBN em cadastrar-livro.js
 export const googleBooksApiKey = "AIzaSyDSicOBNmbm-lPk3airGP3PtL0Uubgmxuw";
+

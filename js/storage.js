@@ -8,43 +8,39 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   onAuthStateChanged, updateProfile, sendPasswordResetEmail, sendEmailVerification,
-  verifyPasswordResetCode, confirmPasswordReset,
+  verifyPasswordResetCode, confirmPasswordReset, deleteUser,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-  doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc,
-  query, where, orderBy, onSnapshot, increment, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc,
+  query, where, onSnapshot, increment, serverTimestamp, deleteField,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const DEFAULT_FOTO = 'https://i.pravatar.cc/150?img=5';
+// Bonequinho rosa do layout, para quem não tem foto (no banco a foto fica vazia).
+export const DEFAULT_FOTO = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#D481A3"/><circle cx="50" cy="31" r="16" fill="#FAD3E2"/><path d="M17 78c4-17 18-27 33-27s29 10 33 27c-8 9-20 14-33 14s-25-5-33-14z" fill="#FAD3E2"/></svg>')}`;
 
 // -------- Estado em cache (preenchido pelo listener de autenticação) --------
 let cachedUser = null;
 let cachedSession = null;
-let cachedPoints = null;
 let cachedFavorites = new Set();
-let cachedReadList = new Set();
-let cachedNotifications = [];
 
 let resolveAuthReady;
 export const authReady = new Promise(resolve => { resolveAuthReady = resolve; });
 let authReadyResolved = false;
 
-function unsubscribeAll() {
-  favoritesUnsub?.(); readListUnsub?.(); notifUnsub?.();
-  favoritesUnsub = readListUnsub = notifUnsub = null;
-}
-let favoritesUnsub = null, readListUnsub = null, notifUnsub = null;
+let favoritesUnsub = null;
+
+// O WhatsApp fica em users/{uid}/contato/whatsapp: o perfil é público (aparece
+// para visitantes sem login), mas o telefone só é lido por quem está logado.
+const contatoRef = (uid) => doc(db, 'users', uid, 'contato', 'whatsapp');
 
 onAuthStateChanged(auth, async (user) => {
-  unsubscribeAll();
+  favoritesUnsub?.();
+  favoritesUnsub = null;
   cachedUser = user;
 
   if (!user) {
     cachedSession = null;
-    cachedPoints = null;
     cachedFavorites = new Set();
-    cachedReadList = new Set();
-    cachedNotifications = [];
   } else {
     const ref = doc(db, 'users', user.uid);
     let snap = await getDoc(ref);
@@ -56,18 +52,14 @@ onAuthStateChanged(auth, async (user) => {
       snap = await getDoc(ref);
     }
     const data = snap.exists() ? snap.data() : {};
-    cachedSession = { id: user.uid, nome: data.nome || 'Leitor(a)', email: data.email || user.email || '', foto: data.foto || DEFAULT_FOTO, cidade: data.cidade || '', estado: data.estado || '', bio: data.bio || 'Ainda não escrevi minha biografia.', generosFavoritos: data.generosFavoritos || [] };
-    cachedPoints = data.pontos ?? 0;
+    // O perfil é público: o e-mail fica só no login (Firebase Auth). Contas
+    // antigas que ainda têm o campo no perfil têm ele apagado aqui.
+    if ('email' in data) updateDoc(ref, { email: deleteField() }).catch(() => {});
+    const contato = await getDoc(contatoRef(user.uid)).catch(() => null);
+    cachedSession = { id: user.uid, nome: data.nome || 'Leitor(a)', email: user.email || '', foto: data.foto || DEFAULT_FOTO, cidade: data.cidade || '', estado: data.estado || '', bio: data.bio || 'Ainda não escrevi minha biografia.', telefone: contato?.data()?.telefone || '' };
 
     favoritesUnsub = onSnapshot(collection(db, 'users', user.uid, 'favorites'), (qs) => {
       cachedFavorites = new Set(qs.docs.map(d => d.id));
-    });
-    readListUnsub = onSnapshot(collection(db, 'users', user.uid, 'readList'), (qs) => {
-      cachedReadList = new Set(qs.docs.map(d => d.id));
-    });
-    notifUnsub = onSnapshot(collection(db, 'users', user.uid, 'notifications'), (qs) => {
-      cachedNotifications = qs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
-      window.dispatchEvent(new CustomEvent('tdl:notification'));
     });
   }
 
@@ -87,21 +79,21 @@ export function isLoggedIn() {
 // Cria o documento de perfil e já preenche o cache local na hora — não dá pra
 // confiar só no listener onAuthStateChanged aqui, porque ele dispara assim que
 // o login acontece e pode ler o documento ANTES desta escrita terminar (corrida).
-async function createUserDoc(uid, { nome, email, foto, cidade = '', estado = '', generosFavoritos = [] }) {
+async function createUserDoc(uid, { nome, email, foto, telefone = '' }) {
   const data = {
-    nome, email, foto: foto || DEFAULT_FOTO, cidade, estado,
-    bio: 'Ainda não escrevi minha biografia.', generosFavoritos,
-    pontos: 5, createdAt: serverTimestamp(),
+    nome, foto: foto || '', cidade: '', estado: '',
+    bio: 'Ainda não escrevi minha biografia.',
+    createdAt: serverTimestamp(),
   };
   await setDoc(doc(db, 'users', uid), data);
-  cachedSession = { id: uid, ...data };
-  cachedPoints = data.pontos;
+  if (telefone) await setDoc(contatoRef(uid), { telefone });
+  cachedSession = { id: uid, ...data, email, foto: data.foto || DEFAULT_FOTO, telefone };
 }
 
-export async function signUpWithEmail({ nome, email, senha }) {
+export async function signUpWithEmail({ nome, email, senha, telefone }) {
   const cred = await createUserWithEmailAndPassword(auth, email, senha);
   await updateProfile(cred.user, { displayName: nome });
-  await createUserDoc(cred.user.uid, { nome, email });
+  await createUserDoc(cred.user.uid, { nome, email, telefone });
   sendEmailVerification(cred.user).catch(() => {}); // não bloqueia o cadastro se falhar
   return cred.user;
 }
@@ -111,6 +103,8 @@ export async function loginWithEmail({ email, senha }) {
   return cred.user;
 }
 
+// O Google não informa o telefone: a conta nasce sem WhatsApp e a pessoa
+// completa em Configurações (anunciar exige o número).
 async function ensureGoogleUserDoc(user) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
@@ -164,38 +158,48 @@ export async function updateSession(patch) {
   return cachedSession;
 }
 
+export async function saveTelefone(telefone) {
+  if (!cachedUser) return null;
+  await setDoc(contatoRef(cachedUser.uid), { telefone });
+  cachedSession = { ...cachedSession, telefone };
+  return cachedSession;
+}
+
+// WhatsApp do anunciante (só para quem está logado; vazio se não tiver).
+export async function getOwnerTelefone(ownerId) {
+  if (!cachedUser) return '';
+  const snap = await getDoc(contatoRef(ownerId));
+  return snap.exists() ? snap.data().telefone || '' : '';
+}
+
 export async function logout() {
   await signOut(auth);
 }
 
-// -------- Pontos --------
-export function getPoints() {
-  return cachedPoints;
-}
-
-export async function addPoints(amount, reason) {
-  if (!cachedUser) return null;
-  await updateDoc(doc(db, 'users', cachedUser.uid), { pontos: increment(amount) });
-  cachedPoints = Math.max(0, (cachedPoints ?? 0) + amount);
-  if (reason) {
-    await addNotification(
-      amount >= 0 ? 'Pontos recebidos' : 'Pontos debitados',
-      `${amount >= 0 ? '+' : ''}${amount} pontos — ${reason}`,
-      'pontos'
-    );
+// Exclui a conta: tira os livros anunciados da Biblioteca, apaga os favoritos,
+// as avaliações que a pessoa escreveu, o WhatsApp e o perfil, e por fim remove o login. O Firebase só deixa excluir
+// o login logo depois de entrar, por isso confere isso antes de mexer em qualquer coisa.
+export async function excluirConta() {
+  if (!cachedUser) throw new Error('Entre na sua conta para excluí-la.');
+  const ultimoLogin = new Date(cachedUser.metadata?.lastSignInTime || 0).getTime();
+  if (Date.now() - ultimoLogin > 4 * 60 * 1000) {
+    const err = new Error('Por segurança, saia e entre de novo na sua conta antes de excluí-la.');
+    err.code = 'precisa-login-recente';
+    throw err;
   }
-  return cachedPoints;
+  const uid = cachedUser.uid;
+  const [livros, favoritos, avaliacoes] = await Promise.all([
+    getDocs(query(collection(db, 'books'), where('ownerId', '==', uid))),
+    getDocs(collection(db, 'users', uid, 'favorites')),
+    getDocs(query(collection(db, 'ratings'), where('autorId', '==', uid))),
+  ]);
+  await Promise.all([...livros.docs, ...favoritos.docs, ...avaliacoes.docs].map(d => deleteDoc(d.ref)));
+  await deleteDoc(contatoRef(uid));
+  await deleteDoc(doc(db, 'users', uid));
+  await deleteUser(cachedUser);
 }
 
-export const PONTOS_REGRAS = {
-  CRIAR_CONTA: 5,
-  ENVIAR_LIVRO: 1,
-  CONCLUIR_TROCA: 2,
-  AVALIACAO_POSITIVA: 1,
-  CANCELAR_SEM_JUSTIFICATIVA: -2,
-};
-
-// -------- Favoritos / lidos --------
+// -------- Favoritos --------
 export function getFavorites() { return [...cachedFavorites]; }
 export function isFavorite(bookId) { return cachedFavorites.has(bookId); }
 export async function toggleFavorite(bookId) {
@@ -207,23 +211,14 @@ export async function toggleFavorite(bookId) {
     cachedFavorites.delete(bookId);
     await updateDoc(bookRef, { curtidas: increment(-1) }).catch(() => {});
   } else {
-    await setDoc(ref, { addedAt: serverTimestamp() });
+    await setDoc(ref, {});
     cachedFavorites.add(bookId);
     await updateDoc(bookRef, { curtidas: increment(1) }).catch(() => {});
   }
 }
 
-export function getReadList() { return [...cachedReadList]; }
-export function isRead(bookId) { return cachedReadList.has(bookId); }
-export async function toggleRead(bookId) {
-  if (!cachedUser) return;
-  const ref = doc(db, 'users', cachedUser.uid, 'readList', bookId);
-  if (cachedReadList.has(bookId)) { await deleteDoc(ref); cachedReadList.delete(bookId); }
-  else { await setDoc(ref, { addedAt: serverTimestamp() }); cachedReadList.add(bookId); }
-}
-
 // -------- Livros --------
-export async function getFirestoreBooks() {
+async function getFirestoreBooks() {
   const qs = await getDocs(collection(db, 'books'));
   return qs.docs.map(d => ({ id: d.id, ...d.data() }));
 }
@@ -236,12 +231,23 @@ export async function getMyBooks() {
 }
 
 export async function addMyBook(book) {
-  const docRef = await addDoc(collection(db, 'books'), {
+  const data = {
     ...book, ownerId: cachedUser.uid, curtidas: 0,
     dataCadastro: new Date().toISOString().slice(0, 10),
-  });
-  await addPoints(PONTOS_REGRAS.ENVIAR_LIVRO, 'livro anunciado');
-  return { id: docRef.id, ...book, ownerId: cachedUser.uid };
+  };
+  const docRef = doc(collection(db, 'books'));
+  await setDoc(docRef, data);
+  return { id: docRef.id, ...data };
+}
+
+// Edição e exclusão de um livro anunciado (tela "Meu acervo"). As regras do
+// Firestore só deixam o dono alterar ou apagar o livro.
+export async function updateMyBook(bookId, patch) {
+  await updateDoc(doc(db, 'books', bookId), patch);
+}
+
+export async function deleteMyBook(bookId) {
+  await deleteDoc(doc(db, 'books', bookId));
 }
 
 export async function getAllBooks() {
@@ -268,299 +274,58 @@ export async function getOwnerInfo(ownerId) {
   if (cachedUser && ownerId === cachedUser.uid) {
     return {
       id: ownerId, nome: cachedSession?.nome || 'Você', foto: cachedSession?.foto || DEFAULT_FOTO,
-      cidade: cachedSession?.cidade || '', estado: cachedSession?.estado || '', avaliacaoMedia: 5, totalAvaliacoes: 0,
+      cidade: cachedSession?.cidade || '', estado: cachedSession?.estado || '',
     };
   }
   const snap = await getDoc(doc(db, 'users', ownerId));
   if (snap.exists()) {
     const d = snap.data();
-    return { id: ownerId, nome: d.nome, foto: d.foto || DEFAULT_FOTO, cidade: d.cidade || '', estado: d.estado || '', avaliacaoMedia: d.avaliacaoMedia ?? 5, totalAvaliacoes: d.totalAvaliacoes ?? 0 };
+    return { id: ownerId, nome: d.nome, foto: d.foto || DEFAULT_FOTO, cidade: d.cidade || '', estado: d.estado || '' };
   }
-  return { nome: 'Anunciante', foto: DEFAULT_FOTO, cidade: '', estado: '', avaliacaoMedia: 5, totalAvaliacoes: 0 };
+  return { nome: 'Anunciante', foto: DEFAULT_FOTO, cidade: '', estado: '' };
 }
 
-// -------- Trocas --------
-// As regras puras (status, envios, normalização) ficam em trade-logic.js, para
-// poderem ser testadas sem Firebase; aqui só o que lê/grava no Firestore.
-import {
-  TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, ENVIO_KEYS, isDualTrade, envioVazio,
-  normalizeTrade, getEnvios, envioTitulo, envioField, aggregateStatus, nextEnvioStatus,
-} from './trade-logic.js';
-export { TRADE_STATUS, STATUS_FINAL, STATUS_CHEGADA, ENVIO_KEYS, isDualTrade, getEnvios, envioTitulo };
-
-
-// Trocas livro por livro criadas antes de guardarmos os títulos dos livros
-// oferecidos: busca uma vez e grava na troca, para os dois lados verem o título
-// (no card e nas notificações) em vez de "o livro de Fulano".
-async function ensureOferecidosTitulos(t) {
-  if (!isDualTrade(t) || t.livrosOferecidosTitulos || !t.livrosOferecidos?.length) return t;
-  const livros = (await Promise.all(t.livrosOferecidos.map(id => getAnyBookById(id).catch(() => null)))).filter(Boolean);
-  if (!livros.length) return t; // livros já removidos: fica o texto genérico
-  t.livrosOferecidosTitulos = livros.map(b => b.titulo);
-  await updateDoc(doc(db, 'trades', t.id), { livrosOferecidosTitulos: t.livrosOferecidosTitulos }).catch(() => {});
-  return t;
-}
-
-async function readTrade(tradeId) {
-  const snap = await getDoc(doc(db, 'trades', tradeId));
-  return snap.exists() ? ensureOferecidosTitulos(normalizeTrade({ id: snap.id, ...snap.data() })) : null;
-}
-
-
-export async function getTrades() {
-  if (!cachedUser) return [];
-  const uid = cachedUser.uid;
-  const [asRequester, asOwner] = await Promise.all([
-    getDocs(query(collection(db, 'trades'), where('requesterId', '==', uid))),
-    getDocs(query(collection(db, 'trades'), where('ownerId', '==', uid))),
-  ]);
-  const map = new Map();
-  asRequester.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
-  asOwner.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
-  map.forEach(normalizeTrade);
-  await Promise.all([...map.values()].map(ensureOferecidosTitulos));
-  return [...map.values()].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
-}
-
-export async function createTradeRequest({ bookId, tipo, pontosUsados, livrosOferecidos, mensagem }) {
-  const book = await getAnyBookById(bookId);
-  const owner = await getOwnerInfo(book?.ownerId);
-  const oferecidos = (await Promise.all((livrosOferecidos || []).map(getAnyBookById))).filter(Boolean);
-
-  const trade = {
-    bookId,
-    bookTitulo: book?.titulo || 'Livro',
-    bookCapa: book?.capa || '',
-    requesterId: cachedUser.uid,
-    requesterNome: cachedSession?.nome || 'Leitor(a)',
-    ownerId: book?.ownerId,
-    donoNome: owner?.nome || 'Anunciante',
-    tipo, // 'pontos' | 'proposta'
-    pontosUsados: pontosUsados || 0,
-    livrosOferecidos: livrosOferecidos || [],
-    livrosOferecidosTitulos: oferecidos.map(b => b.titulo),
-    mensagem: mensagem || '',
-    status: 'Solicitação enviada',
-    criadoEm: new Date().toISOString(),
-    prazoPostagem: null,
-    rastreio: { codigo: '', transportadora: '' },
-  };
-  if (tipo === 'proposta') trade.envios = { dono: envioVazio(), solicitante: envioVazio() };
-  const docRef = await addDoc(collection(db, 'trades'), trade);
-
-  if (tipo === 'pontos') {
-    await addPoints(-pontosUsados, `solicitação de "${trade.bookTitulo}"`);
-  } else {
-    await addPoints(-1, 'custo de solicitação de troca');
-  }
-  await addNotification('Solicitação enviada', `Sua solicitação para "${trade.bookTitulo}" foi enviada ao anunciante.`, 'troca');
-  await addNotificationFor(book?.ownerId, 'Nova proposta de troca', `${cachedSession?.nome || 'Alguém'} quer trocar por "${trade.bookTitulo}".`, 'proposta');
-  return normalizeTrade({ id: docRef.id, ...trade });
-}
-
-export async function getTradeById(tradeId) {
-  return readTrade(tradeId);
-}
-
-export async function updateTrade(tradeId, patch) {
-  await updateDoc(doc(db, 'trades', tradeId), patch);
-  return readTrade(tradeId);
-}
-
-function otherPartyId(trade) {
-  return trade.requesterId === cachedUser?.uid ? trade.ownerId : trade.requesterId;
-}
-export { otherPartyId };
-
-// Avança uma etapa de um envio (uso de quem envia o livro). Para no "Chegada na
-// agência" — a finalização é de quem recebe, em finalizeTrade().
-export async function advanceTradeStatus(tradeId, envioKey = 'dono') {
-  const trade = await readTrade(tradeId);
-  if (!trade) return null;
-  const envios = getEnvios(trade);
-  const envio = envios.find(e => e.key === envioKey);
-  const next = nextEnvioStatus(envio.status);
-  if (next === envio.status) return trade;
-  const patch = { [envioField(trade, envioKey, 'status')]: next };
-  if (isDualTrade(trade)) patch.status = aggregateStatus(envios.map(e => e.key === envioKey ? { ...e, status: next } : e));
-  const updated = await updateTrade(tradeId, patch);
-  await addNotification('Atualização de troca', `"${envio.titulo}" agora está: ${next}`, 'troca');
-  const textoOutro = next === STATUS_CHEGADA
-    ? `"${envio.titulo}" chegou na agência dos Correios. Retire o livro e finalize a troca.`
-    : `"${envio.titulo}" agora está: ${next}`;
-  await addNotificationFor(otherPartyId(trade), 'Atualização de troca', textoOutro, 'troca');
-  return updated;
-}
-
-// Quem recebe retirou o livro: encerra o envio (pontos, remoção do livro
-// anunciado). A troca só fica "Finalizada" quando todos os envios foram
-// retirados — a data de finalização é usada na limpeza do chat.
-export async function finalizeTrade(tradeId, envioKey = 'dono') {
-  const trade = await readTrade(tradeId);
-  if (!trade) return null;
-  const envios = getEnvios(trade);
-  const envio = envios.find(e => e.key === envioKey);
-  const tudoFinalizado = envios.every(e => e.key === envioKey || e.status === STATUS_FINAL);
-  const patch = {};
-  if (isDualTrade(trade)) {
-    patch[`envios.${envioKey}.status`] = STATUS_FINAL;
-    patch[`envios.${envioKey}.finalizadoEm`] = new Date().toISOString();
-  }
-  if (tudoFinalizado) {
-    patch.status = STATUS_FINAL;
-    patch.finalizadoEm = serverTimestamp();
-  }
-  const updated = await updateTrade(tradeId, patch);
-  await addNotification('Troca finalizada', `Você retirou "${envio.titulo}". Avalie a troca!`, 'troca');
-  await addNotificationFor(
-    otherPartyId(trade), tudoFinalizado ? 'Troca finalizada' : 'Livro retirado',
-    `${cachedSession?.nome || 'A outra parte'} retirou "${envio.titulo}"${tudoFinalizado ? ' e a troca foi finalizada. Avalie a troca!' : '.'}`,
-    'troca',
-  );
-  await addPoints(PONTOS_REGRAS.CONCLUIR_TROCA, 'troca concluída');
-  const idsToRemove = envioKey === 'dono' ? [trade.bookId] : (trade.livrosOferecidos || []);
-  await Promise.all(idsToRemove.map(id => deleteDoc(doc(db, 'books', id)).catch(() => {})));
-  return updated;
-}
-
-export async function cancelTrade(tradeId, comJustificativa = true) {
-  const trade = await readTrade(tradeId);
-  const updated = await updateTrade(tradeId, { status: 'Cancelada' });
-  if (!comJustificativa) {
-    await addPoints(PONTOS_REGRAS.CANCELAR_SEM_JUSTIFICATIVA, 'troca cancelada sem justificativa');
-  }
-  await addNotification('Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
-  if (trade) await addNotificationFor(otherPartyId(trade), 'Troca cancelada', `A troca de "${updated?.bookTitulo}" foi cancelada.`, 'troca');
-  return updated;
-}
-
-// -------- Correios: agência de retirada e rastreio --------
-
-// Agência preferida do usuário, reaproveitada nas próximas trocas. Fica em
-// users/{uid}/private (só o dono lê) porque guarda telefone e nome completo —
-// o documento do perfil é público.
-export async function getSavedAgencia() {
-  if (!cachedUser) return null;
-  const snap = await getDoc(doc(db, 'users', cachedUser.uid, 'private', 'agencia'));
-  return snap.exists() ? snap.data() : null;
-}
-
-export async function saveAgencia(agencia) {
-  if (!cachedUser) return null;
-  const data = { ...agencia, salvaEm: new Date().toISOString() };
-  await setDoc(doc(db, 'users', cachedUser.uid, 'private', 'agencia'), data);
-  return data;
-}
-
-// Quem recebe escolhe em qual agência dos Correios vai retirar o livro; fica
-// gravado na própria troca, então os dois lados veem (quem envia posta para lá).
-export async function setTradeAgencia(trade, agencia, envioKey = 'dono') {
-  const agenciaRetirada = { ...agencia, escolhidaPor: cachedUser.uid, escolhidaEm: new Date().toISOString() };
-  const updated = await updateTrade(trade.id, { [envioField(trade, envioKey, 'agenciaRetirada')]: agenciaRetirada });
-  await addNotificationFor(
-    otherPartyId(trade), 'Agência de retirada escolhida',
-    `${cachedSession?.nome || 'A outra parte'} vai retirar "${envioTitulo(trade, envioKey)}" em: ${agencia.nome}.`, 'troca',
-  );
-  return updated;
-}
-
-// Salva código/transportadora do envio. Quando quem envia informa o código de
-// um envio "Aceita", o envio vira "Postada" na hora.
-export async function saveTradeTracking(trade, { codigo, transportadora }, envioKey = 'dono') {
-  const envio = getEnvios(trade).find(e => e.key === envioKey);
-  const codigoAntigo = envio.rastreio?.codigo || '';
-  const campo = (f) => envioField(trade, envioKey, `rastreio.${f}`);
-  const patch = { [campo('codigo')]: codigo, [campo('transportadora')]: transportadora };
-  let updated = await updateTrade(trade.id, patch);
-  if (codigo && codigo !== codigoAntigo) {
-    await addNotificationFor(otherPartyId(trade), 'Código de rastreio informado', `"${envio.titulo}": ${codigo}`, 'troca');
-    if (envio.remetenteId === cachedUser?.uid && envio.status === 'Aceita') {
-      updated = await advanceTradeStatus(trade.id, envioKey);
-    }
-  }
-  return updated;
-}
-
-// Escuta as mensagens de uma troca em tempo real — callback é chamado de novo
-// a cada mensagem nova (própria ou da outra parte), sem precisar recarregar.
-// Retorna a função de unsubscribe (chamar ao fechar o chat).
-export function subscribeChatMessages(tradeId, callback) {
-  const q = query(collection(db, 'trades', tradeId, 'messages'), orderBy('hora'));
-  return onSnapshot(q, (qs) => {
-    callback(qs.docs.map(d => ({ id: d.id, ...d.data() })));
-  });
-}
-
-// Envia uma mensagem de chat (autor = usuário atual) e notifica a outra parte da troca.
-export async function sendChatMessage(trade, texto) {
-  await addDoc(collection(db, 'trades', trade.id, 'messages'), {
-    autor: cachedUser.uid, texto, hora: new Date().toISOString(),
-  });
-  await addNotificationFor(otherPartyId(trade), 'Nova mensagem', `${cachedSession?.nome || 'Alguém'} enviou uma mensagem sobre "${trade.bookTitulo}".`, 'chat');
-}
-
-// Trocas finalizadas há mais de 14 dias têm o chat apagado (endereços trocados ali não
-// precisam ficar guardados para sempre). O prazo dá tempo de reabrir a conversa em
-// caso de problema na entrega antes de o histórico sumir.
-const PRAZO_CARENCIA_CHAT_DIAS = 14;
-export async function cleanupExpiredMessages(trade) {
-  if (trade.status !== STATUS_FINAL || !trade.finalizadoEm) return;
-  const finalizadoEmMs = trade.finalizadoEm.toMillis ? trade.finalizadoEm.toMillis() : new Date(trade.finalizadoEm).getTime();
-  const diasPassados = (Date.now() - finalizadoEmMs) / 86400000;
-  if (diasPassados < PRAZO_CARENCIA_CHAT_DIAS) return;
-  const qs = await getDocs(collection(db, 'trades', trade.id, 'messages'));
-  await Promise.all(qs.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+// Livros anunciados por um usuário qualquer (perfil público do anunciante).
+export async function getBooksByOwner(ownerId) {
+  const qs = await getDocs(query(collection(db, 'books'), where('ownerId', '==', ownerId)));
+  return qs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro));
 }
 
 // -------- Avaliações --------
-export async function addRating(rating) {
-  await addDoc(collection(db, 'ratings'), { ...rating, autorId: cachedUser.uid, criadoEm: new Date().toISOString() });
-  await addPoints(PONTOS_REGRAS.AVALIACAO_POSITIVA, 'avaliação positiva recebida');
+// Qualquer pessoa logada avalia o perfil de outra (não o próprio), com nota de
+// 1 a 5 e comentário opcional. O id é "avaliado_autor": cada um avalia um
+// perfil uma única vez (as regras não deixam regravar).
+const avaliacaoRef = (avaliadoId) => doc(db, 'ratings', `${avaliadoId}_${cachedUser.uid}`);
+
+export async function saveRating(avaliadoId, { nota, comentario }) {
+  if (!cachedUser) throw new Error('Entre na sua conta para avaliar.');
+  if (avaliadoId === cachedUser.uid) throw new Error('Você não pode avaliar o próprio perfil.');
+  await setDoc(avaliacaoRef(avaliadoId), {
+    avaliadoId, autorId: cachedUser.uid, nota, comentario, criadoEm: new Date().toISOString(),
+  });
 }
 
-// Avaliações recebidas por um usuário (exibidas no perfil dele / anúncios dele — não do livro específico)
-export async function getRatingsForUser(userId) {
+// O dono do perfil responde uma avaliação recebida, uma vez (as regras só
+// deixam ele gravar a resposta, e só se ainda não houver uma).
+export async function replyRating(autorId, texto) {
+  if (!cachedUser) throw new Error('Entre na sua conta para responder.');
+  await updateDoc(doc(db, 'ratings', `${cachedUser.uid}_${autorId}`), {
+    resposta: texto, respostaEm: new Date().toISOString(),
+  });
+}
+
+// Avaliações recebidas por um usuário, prontas para exibir (página do livro e
+// perfil do anunciante), da mais recente para a mais antiga.
+export async function getPublicReviews(userId) {
   const qs = await getDocs(query(collection(db, 'ratings'), where('avaliadoId', '==', userId)));
-  return qs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
-}
-
-// Calcula a nota de uma avaliação a partir dos critérios numéricos presentes
-// (avaliações de quem enviou o livro só têm "cooperacao").
-export function ratingScore(rating) {
-  const keys = ['conservacao', 'comunicacao', 'rapidez', 'experiencia', 'cooperacao'];
-  const values = keys.map(k => rating[k]).filter(v => typeof v === 'number');
-  return values.length ? values.reduce((s, v) => s + v, 0) / values.length : 5;
-}
-
-// -------- Notificações --------
-export function getNotifications() { return cachedNotifications; }
-export async function addNotification(titulo, texto, tipo = 'geral') {
-  if (!cachedUser) return;
-  await addDoc(collection(db, 'users', cachedUser.uid, 'notifications'), {
-    titulo, texto, tipo, lida: false, criadoEm: new Date().toISOString(),
-  });
-}
-// Notifica a outra parte de uma troca (ex.: dono do livro quando chega uma proposta).
-export async function addNotificationFor(uid, titulo, texto, tipo = 'geral') {
-  if (!uid) return;
-  await addDoc(collection(db, 'users', uid, 'notifications'), {
-    titulo, texto, tipo, lida: false, criadoEm: new Date().toISOString(),
-  });
-}
-export async function markNotificationsRead() {
-  if (!cachedUser) return;
-  await Promise.all(
-    cachedNotifications.filter(n => !n.lida).map(n => updateDoc(doc(db, 'users', cachedUser.uid, 'notifications', n.id), { lida: true }))
-  );
-}
-export function unreadCount() {
-  return cachedNotifications.filter(n => !n.lida).length;
-}
-
-// -------- Tema (segue local por dispositivo, não é dado de conta) --------
-export function getTheme() {
-  return localStorage.getItem('tdl_theme')?.replace(/"/g, '') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-}
-export function setTheme(theme) {
-  localStorage.setItem('tdl_theme', theme);
+  const ratings = qs.docs.map(d => d.data()).sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+  return Promise.all(ratings.map(async (r) => ({
+    autorId: r.autorId,
+    autor: await getOwnerInfo(r.autorId),
+    nota: r.nota,
+    comentario: r.comentario,
+    data: r.criadoEm,
+    resposta: r.resposta || '',
+    respostaEm: r.respostaEm || '',
+  })));
 }

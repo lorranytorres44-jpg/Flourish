@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu acervo — Flowrish</title>
+<meta name="description" content="Veja, edite e exclua os livros que você anunciou para troca.">
+<meta name="theme-color" content="#4B4C33">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/home.css">
+<link rel="stylesheet" href="css/pages/biblioteca.css">
+<link rel="stylesheet" href="css/pages/acervo.css">
+</head>
+<body class="home-page library-page acervo-page">
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+<div id="navbar-root"></div>
+
+<main id="main" class="lib-main">
+
+  <div class="container lib-inner">
+    <h1 class="visually-hidden">Meu acervo</h1>
+
+    <div class="lib-search-row">
+      <label class="lib-search">
+        <span class="visually-hidden">Buscar por título ou autor</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" id="fNome" autocomplete="off" placeholder="Digite o nome do autor ou do livro">
+      </label>
+      <button type="button" class="lib-filter-btn" id="toggleFilters" aria-label="Ocultar filtros" aria-expanded="true" aria-controls="filtersPanel">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5L3 4z"/></svg>
+      </button>
+    </div>
+
+    <section class="lib-filters" id="filtersPanel" aria-label="Filtros do acervo">
+      <div class="lib-filters-top">
+        <div class="lib-filter-group lib-filter-genero">
+          <h2>Gênero</h2>
+          <div class="filter-chip-list" id="fGenero"></div>
+        </div>
+        <div class="lib-filter-group">
+          <h2>Conservação</h2>
+          <div class="filter-chip-list" id="fConservacao"></div>
+        </div>
+      </div>
+      <div class="lib-filters-bottom">
+        <div class="lib-filter-group">
+          <h2>Origem</h2>
+          <div class="filter-chip-list" id="fOrigem"></div>
+        </div>
+        <button type="button" class="lib-clear" id="clearFilters">Limpar</button>
+      </div>
+    </section>
+
+    <p class="lib-count" id="resultsCount" aria-live="polite"></p>
+    <div class="lib-grid hv-cards" id="bookGrid"></div>
+    <div class="empty-state lib-empty" id="emptyState" hidden>
+      <h3>Nenhum livro encontrado</h3>
+      <p>Tente ajustar os filtros.</p>
+    </div>
+    <p class="acervo-vazio" id="acervoVazio" hidden>Você ainda não anunciou nenhum livro!</p>
+  </div>
+</main>
+
+<div id="footer-root"></div>
+<script type="module" src="js/acervo.js"></script>
+</body>
+</html>

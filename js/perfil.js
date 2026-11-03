@@ -1,166 +1,147 @@
-import { GENEROS } from './data.js';
 import {
-  getSession, updateSession, isLoggedIn, getPoints, getMyBooks, getTrades,
-  getFavorites, getAnyBookById, getRatingsForUser, ratingScore, authReady,
+  getSession, updateSession, saveTelefone, isLoggedIn, getMyBooks, getAnyBookById,
+  authReady, getFavorites, logout, excluirConta, DEFAULT_FOTO,
 } from './storage.js';
 import { renderNavbar, renderFooter, requireLoginModal } from './navbar.js';
 import { renderBookGrid, initRevealAnimations } from './book-card.js';
-import { initTheme } from './theme.js';
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
 import { populateEstados } from './auth.js';
 import { compressImage } from './image-utils.js';
+import { maskTelefone, isValidTelefone } from './validators.js';
+import { renderAvaliacoes } from './reviews.js';
 
-initTheme();
+// Perfil: cabeçalho com os números do usuário (com a nota) e as abas
+// Favoritos, Avaliações recebidas e Configurações (editar perfil e WhatsApp,
+// excluir conta, sair).
 window.addEventListener('unload', () => {});
 window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
 await authReady;
-renderNavbar();
+renderNavbar('perfil.html');
 renderFooter();
 
-if (!isLoggedIn()) {
-  requireLoginModal('Faça login para ver seu perfil.');
-}
+if (!isLoggedIn()) requireLoginModal();
 
 let session = getSession() || {};
-const trades = await getTrades();
-const concluidas = trades.filter(t => t.status === 'Finalizada').length;
-const minhasAvaliacoes = await getRatingsForUser(session.id);
-const notaMedia = minhasAvaliacoes.length
-  ? minhasAvaliacoes.reduce((s, r) => s + ratingScore(r), 0) / minhasAvaliacoes.length
-  : 5;
 
 function renderHeader() {
-  document.getElementById('pFoto').src = session.foto || 'https://i.pravatar.cc/150?img=5';
+  document.getElementById('pFoto').src = session.foto || DEFAULT_FOTO;
   document.getElementById('pNome').textContent = session.nome || 'Leitor(a)';
-  document.getElementById('pLocal').textContent = [session.cidade, session.estado].filter(Boolean).join(' / ') || 'Localização não informada';
+  document.getElementById('pLocal').textContent = [session.cidade, session.estado].filter(Boolean).join('/') || 'Cidade/UF';
   document.getElementById('pBio').textContent = session.bio || 'Ainda não escreveu uma biografia.';
-  document.getElementById('statPontos').textContent = getPoints() ?? 0;
-  document.getElementById('statAvaliacao').textContent = `${notaMedia.toFixed(1)}★`;
-  document.getElementById('statTrocas').textContent = concluidas;
 }
 renderHeader();
+document.getElementById('statAnunciados').textContent = (await getMyBooks()).length;
 
-// Tabs
+// ---------- Abas ----------
 function showTab(tab) {
   const btn = document.querySelector(`#profileTabs button[data-tab="${tab}"]`);
   if (!btn) return;
-  document.querySelectorAll('#profileTabs button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-  document.getElementById(`panel-${tab}`).style.display = 'block';
+  document.querySelectorAll('#profileTabs button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.id !== `panel-${tab}`; });
 }
 document.querySelectorAll('#profileTabs button').forEach(btn => {
   btn.addEventListener('click', () => showTab(btn.dataset.tab));
 });
-// Links externos podem abrir direto numa aba via #hash (ex: perfil.html#favoritos).
-if (location.hash) {
+// Links de outras páginas abrem direto numa aba via #hash (ex.: perfil.html#config).
+function openTabFromHash() {
+  if (!location.hash) return;
   showTab(location.hash.slice(1));
   document.getElementById('profileTabs')?.scrollIntoView({ block: 'start' });
 }
+openTabFromHash();
+window.addEventListener('hashchange', openTabFromHash);
 
-const myBooks = await getMyBooks();
-document.getElementById('statAnunciados').textContent = myBooks.length;
+// ---------- Favoritos ----------
+const favoritos = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
+document.getElementById('statFavoritos').textContent = favoritos.length;
+await renderBookGrid(document.getElementById('gridFavoritosDash'), favoritos, 'Você ainda não favoritou nenhum livro.');
 
-await renderBookGrid(document.getElementById('gridAnunciados'), myBooks, 'Você ainda não anunciou nenhum livro.');
-const favBooks = (await Promise.all(getFavorites().map(getAnyBookById))).filter(Boolean);
-await renderBookGrid(document.getElementById('gridFavoritos'), favBooks, 'Você ainda não favoritou nenhum livro.');
+// ---------- Avaliações recebidas (nota no topo e lista na aba) ----------
+if (session.id) await renderAvaliacoes(document.body, session);
 
-function renderGenreList() {
-  document.getElementById('genreList').innerHTML = GENEROS.map(g => {
-    const active = (session.generosFavoritos || []).includes(g);
-    return `<span class="genre-chip ${active ? 'active' : ''}">${g}</span>`;
-  }).join('');
+// ---------- Configurações: editar perfil ----------
+const form = document.getElementById('editForm');
+const estadoSelect = document.getElementById('editEstado');
+const telefoneInput = document.getElementById('editTelefone');
+populateEstados(estadoSelect);
+let novaFoto = session.foto === DEFAULT_FOTO ? '' : session.foto; // o bonequinho não vai para o banco
+document.getElementById('editAvatarPreview').src = session.foto || DEFAULT_FOTO;
+document.getElementById('editNome').value = session.nome || '';
+telefoneInput.value = session.telefone || '';
+document.getElementById('editCidade').value = session.cidade || '';
+estadoSelect.value = session.estado || '';
+document.getElementById('editBio').value = session.bio || '';
+telefoneInput.addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
+
+// Conta sem WhatsApp (cadastro pelo Google): abre direto no campo.
+if (isLoggedIn() && !session.telefone) {
+  showTab('config');
+  telefoneInput.focus();
+  showToast('Informe seu WhatsApp', 'É por ele que os leitores combinam a troca dos seus livros.');
 }
-renderGenreList();
 
-const listHistorico = document.getElementById('listHistorico');
-if (trades.length === 0) {
-  listHistorico.innerHTML = `<div class="empty-state"><div class="emoji">🔄</div><p>Nenhuma troca no histórico ainda.</p></div>`;
-} else {
-  listHistorico.innerHTML = trades.map(t => `
-    <div class="card" style="display:flex;gap:16px;align-items:center;padding:16px;margin-bottom:12px;">
-      <img src="${t.bookCapa}" alt="" style="width:50px;aspect-ratio:3/4;object-fit:cover;border-radius:6px;">
-      <div style="flex:1;">
-        <strong>${t.bookTitulo}</strong>
-        <p class="mb-0 text-muted" style="font-size:0.85rem;">${new Date(t.criadoEm).toLocaleDateString('pt-BR')} · ${t.tipo === 'pontos' ? 'Troca por pontos' : 'Proposta de troca'}</p>
-      </div>
-      <span class="badge badge-brown">${t.status}</span>
-    </div>
-  `).join('');
-}
+document.getElementById('editarPerfilBtn').addEventListener('click', () => document.getElementById('editNome').focus());
+document.getElementById('editFotoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  novaFoto = await compressImage(file, 400, 0.75);
+  document.getElementById('editAvatarPreview').src = novaFoto;
+});
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const telefone = telefoneInput.value.trim();
+  if (!isValidTelefone(telefone)) {
+    showToast('WhatsApp inválido', 'Informe o DDD e o número, como (11) 99999-9999.');
+    telefoneInput.focus();
+    return;
+  }
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true;
+  try {
+    if (telefone !== session.telefone) await saveTelefone(telefone);
+    session = await updateSession({
+      nome: document.getElementById('editNome').value.trim() || session.nome,
+      cidade: document.getElementById('editCidade').value.trim(),
+      estado: estadoSelect.value,
+      bio: document.getElementById('editBio').value.trim(),
+      foto: novaFoto || '',
+    });
+    showToast('Perfil atualizado!');
+    renderHeader();
+  } catch {
+    showToast('Não foi possível salvar', 'Tente novamente em instantes.');
+  } finally {
+    btn.disabled = false;
+  }
+});
 
-// Editar perfil
-document.getElementById('editProfileBtn').addEventListener('click', () => {
+// ---------- Configurações: excluir conta e sair ----------
+document.getElementById('excluirContaBtn').addEventListener('click', () => {
   openModal(`
-    <div class="modal-header">
-      <h3 id="editTitle">Editar perfil</h3>
-      <button class="btn-icon modal-close" data-modal-close aria-label="Fechar">✕</button>
+    <h3 id="excluirTitle" class="confirmar-titulo">Tem certeza que deseja excluir sua conta?</h3>
+    <p class="confirmar-texto">Seus livros saem da Biblioteca e seus dados são apagados.</p>
+    <div class="confirmar-acoes">
+      <button type="button" class="confirmar-nao" data-modal-close>Não</button>
+      <button type="button" class="confirmar-sim" id="confirmExcluirBtn">Sim</button>
     </div>
-    <form id="editForm">
-      <div class="avatar-upload">
-        <img id="editAvatarPreview" src="${session.foto || 'https://i.pravatar.cc/150?img=5'}" alt="">
-        <div>
-          <label class="btn btn-secondary btn-sm" for="editFotoInput" style="cursor:pointer;">Alterar foto</label>
-          <input type="file" id="editFotoInput" accept="image/*" class="visually-hidden">
-        </div>
-      </div>
-      <div class="field"><label for="editNome">Nome</label><input class="input" id="editNome" value="${session.nome || ''}"></div>
-      <div class="row-2">
-        <div class="field"><label for="editCidade">Cidade</label><input class="input" id="editCidade" value="${session.cidade || ''}"></div>
-        <div class="field"><label for="editEstado">Estado</label><select class="input" id="editEstado"></select></div>
-      </div>
-      <div class="field"><label for="editBio">Biografia</label><textarea class="input" id="editBio" rows="3">${session.bio || ''}</textarea></div>
-      <div class="field">
-        <label>Gêneros favoritos</label>
-        <div id="editGenres" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Salvar alterações</button>
-    </form>
-  `, { labelledBy: 'editTitle', onMount: (overlay, close) => {
-    const estadoSelect = overlay.querySelector('#editEstado');
-    populateEstados(estadoSelect);
-    estadoSelect.value = session.estado || '';
-
-    const selected = new Set(session.generosFavoritos || []);
-    const genresEl = overlay.querySelector('#editGenres');
-    genresEl.innerHTML = GENEROS.map(g => `<button type="button" class="genre-chip ${selected.has(g) ? 'active' : ''}" data-g="${g}">${g}</button>`).join('');
-    genresEl.querySelectorAll('.genre-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const g = chip.dataset.g;
-        if (selected.has(g)) { selected.delete(g); chip.classList.remove('active'); }
-        else { selected.add(g); chip.classList.add('active'); }
-      });
-    });
-
-    let novaFoto = session.foto;
-    overlay.querySelector('#editFotoInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      novaFoto = await compressImage(file, 400, 0.75);
-      overlay.querySelector('#editAvatarPreview').src = novaFoto;
-    });
-
-    overlay.querySelector('#editForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const submitBtn = e.target.querySelector('button[type=submit]');
-      submitBtn.disabled = true;
-      const cidade = overlay.querySelector('#editCidade').value.trim();
-      const estado = estadoSelect.value;
-      session = await updateSession({
-        nome: overlay.querySelector('#editNome').value.trim() || session.nome,
-        cidade,
-        estado,
-        bio: overlay.querySelector('#editBio').value.trim(),
-        generosFavoritos: [...selected],
-        foto: novaFoto,
-      });
-      close();
-      showToast('Perfil atualizado!', '', 'success');
-      renderHeader();
-      renderGenreList();
+  `, { labelledBy: 'excluirTitle', className: 'confirmar-modal', onMount: (overlay, close) => {
+    const sim = overlay.querySelector('#confirmExcluirBtn');
+    sim.addEventListener('click', async () => {
+      sim.disabled = true;
+      try {
+        await excluirConta();
+        window.location.href = 'index.html';
+      } catch (err) {
+        close();
+        showToast('Não foi possível excluir', err.message || 'Tente novamente em instantes.');
+      }
     });
   }});
+});
+document.getElementById('logoutBtnDash').addEventListener('click', async () => {
+  await logout();
+  window.location.href = 'index.html';
 });
 
 initRevealAnimations();

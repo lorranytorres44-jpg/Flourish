@@ -1,7 +1,7 @@
-export function openModal(innerHTML, { onMount, labelledBy } = {}) {
+export function openModal(innerHTML, { onMount, labelledBy, className = '' } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.innerHTML = `<div class="modal" role="dialog" aria-modal="true" ${labelledBy ? `aria-labelledby="${labelledBy}"` : ''}>${innerHTML}</div>`;
+  overlay.innerHTML = `<div class="modal ${className}" role="dialog" aria-modal="true" ${labelledBy ? `aria-labelledby="${labelledBy}"` : ''}>${innerHTML}</div>`;
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
 
