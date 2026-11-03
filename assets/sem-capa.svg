@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420">
+  <defs>
+    <linearGradient id="coverBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4E5032" />
+      <stop offset="100%" stop-color="#3B3C24" />
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="300" height="420" rx="16" fill="url(#coverBg)" />
+  <rect x="12" y="12" width="276" height="396" rx="12" fill="none" stroke="#6D6F49" stroke-width="2" stroke-dasharray="6,4" opacity="0.6" />
+  
+  <g transform="translate(150, 180)" filter="url(#softShadow)" text-anchor="middle">
+    <!-- Ícone de livro estilizado -->
+    <path d="M-36,-24 C-18,-32 0,-24 0,-24 C0,-24 18,-32 36,-24 L36,24 C18,16 0,24 0,24 C0,24 -18,16 -36,24 Z" fill="none" stroke="#DF949D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="0" y1="-24" x2="0" y2="24" stroke="#DF949D" stroke-width="3" />
+    <circle cx="0" cy="-38" r="6" fill="#DF949D" />
+  </g>
+
+  <text x="150" y="245" font-family="'Nunito', -apple-system, sans-serif" font-size="16" font-weight="700" fill="#FBF6EB" text-anchor="middle" letter-spacing="1">SEM CAPA</text>
+  <text x="150" y="268" font-family="'Nunito', -apple-system, sans-serif" font-size="12" fill="#B5AFA0" text-anchor="middle">Flowrish Livros</text>
+</svg>

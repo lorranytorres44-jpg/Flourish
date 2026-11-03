@@ -24,21 +24,36 @@
   position: absolute;
   right: 14px; bottom: 14px;
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 .acervo-btn {
-  width: 40px; height: 40px;
+  width: 42px; height: 42px;
   display: inline-flex; align-items: center; justify-content: center;
-  border: none;
+  border: 1.5px solid var(--border);
   border-radius: 50%;
-  background: transparent;
-  color: var(--hv-cream);
+  background: var(--surface-card);
+  color: var(--text);
+  box-shadow: var(--shadow-3d-btn-secondary);
   cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background-color 0.2s ease;
 }
-.acervo-btn-delete { color: var(--hv-rose); }
-.acervo-btn:hover { background: rgba(245, 238, 218, 0.12); transform: scale(1.08); }
-.acervo-btn:focus-visible { outline: 2px solid var(--hv-cream); outline-offset: 2px; }
+.acervo-btn:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  background: var(--verde-oliva-elevated);
+}
+.acervo-btn:active {
+  transform: translateY(2px) scale(0.96);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.acervo-btn-delete {
+  color: var(--danger);
+}
+.acervo-btn-delete:hover {
+  background: rgba(197, 101, 76, 0.2);
+  border-color: var(--danger);
+}
+.acervo-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .acervo-page .lib-empty[hidden] { display: none; }
 

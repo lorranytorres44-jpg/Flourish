@@ -1,6 +1,9 @@
 import { verifyResetCode, confirmReset } from './storage.js';
 import { showToast } from './toast.js';
 import { bindPasswordStrength, isStrongPassword } from './auth.js';
+import { initTheme } from './theme.js';
+
+initTheme();
 
 
 const params = new URLSearchParams(window.location.search);

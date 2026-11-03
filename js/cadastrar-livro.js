@@ -73,7 +73,8 @@ function numeroEdicao() {
 // Mantém o cartão de pré-visualização sincronizado com o que o usuário edita
 // no formulário, para que ele possa revisar/ajustar tudo antes de publicar.
 function atualizarPreview() {
-  document.getElementById('previewCapa').src = capaEncontrada || 'https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa';
+  document.getElementById('previewCapa').src = capaEncontrada || 'assets/sem-capa.svg';
+  document.getElementById('previewCapa').onerror = function() { this.src = 'assets/sem-capa.svg'; };
   document.getElementById('removeCapaBtn').style.display = capaEncontrada ? 'inline-flex' : 'none';
   document.getElementById('previewTitulo').textContent = document.getElementById('titulo').value || 'Título não encontrado';
   document.getElementById('previewAutor').textContent = document.getElementById('autor').value || 'Autor desconhecido';
@@ -250,8 +251,8 @@ function preencherFormulario(book) {
   document.querySelectorAll('.anunciar-textarea').forEach(ajustarAltura);
 
   // A capa vinda do ISBN fica fora da lista de fotos (ver o envio abaixo).
-  photos.push(...(book.fotos || []).filter(f => f && !f.includes('placehold.co')));
-  if (book.capa && book.capa !== photos[0] && !book.capa.includes('placehold.co')) {
+  photos.push(...(book.fotos || []).filter(f => f && !f.includes('placehold.co') && !f.includes('sem-capa.svg')));
+  if (book.capa && book.capa !== photos[0] && !book.capa.includes('placehold.co') && !book.capa.includes('sem-capa.svg')) {
     capaEncontrada = book.capa;
     atualizarPreview();
     document.getElementById('bookPreview').classList.add('show');
@@ -263,6 +264,10 @@ function preencherFormulario(book) {
 // Submissão do formulário
 document.getElementById('bookForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const capaFinal = (capaEncontrada && (capaEncontrada.startsWith('http') || capaEncontrada.startsWith('data:')))
+    ? capaEncontrada
+    : (photos[0] || 'assets/sem-capa.svg');
+
   const book = {
     titulo: document.getElementById('titulo').value.trim(),
     autor: document.getElementById('autor').value.trim(),
@@ -277,8 +282,8 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
     tempoUso: document.getElementById('tempoUso').value.trim(),
     observacoes: document.getElementById('observacoes').value.trim(),
     semDanificacoes: semDanificacoesCheckbox.checked,
-    capa: capaEncontrada || photos[0] || 'https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa',
-    fotos: photos.length ? photos : [capaEncontrada || 'https://placehold.co/300x420/A8CFA8/2F4A2F?text=Sem+capa'],
+    capa: capaFinal,
+    fotos: photos.length ? photos : [capaFinal],
   };
 
   if (!book.titulo || !book.autor || !book.generos.length || !book.nacionalidade || !book.sinopse || !book.estadoConservacao) {

@@ -11,13 +11,24 @@
 .sl-inner { max-width: 1020px; }
 
 /* ---------- Cabeçalho ---------- */
-.sl-header { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.sl-header {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  background: var(--surface-card);
+  padding: 36px 40px;
+  border-radius: 28px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-clay-card);
+}
 .sl-avatar {
   width: 120px; height: 120px;
   border-radius: 50%;
-  border: 4px solid var(--hv-rose);
-  background: var(--hv-rose);
+  border: 4px solid var(--primary);
+  background: var(--primary);
   object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 .sl-name {
   margin: 0;

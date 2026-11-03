@@ -1,7 +1,9 @@
 import { loginWithEmail, loginWithGoogle, isLoggedIn, authReady, sendPasswordReset } from './storage.js';
 import { showToast } from './toast.js';
 import { openForgotPasswordModal } from './auth.js';
+import { initTheme } from './theme.js';
 
+initTheme();
 await authReady;
 if (isLoggedIn()) window.location.href = 'perfil.html';
 
